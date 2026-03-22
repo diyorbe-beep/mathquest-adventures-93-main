@@ -1,0 +1,27 @@
+Administrator panel (/admin) — Lovable foydalanuvchilari uchun
+============================================================
+
+service_role kaliti va "npm run bootstrap:admin" SHART EMAS.
+
+QADAMLAR:
+
+1) Brauzerda ilovangizda /auth sahifasidan hisob yarating (email + parol).
+
+2) Supabase oching:
+   - Lovable loyihangiz ichida Supabase / Database / "View in Supabase" kabi havola bo'lishi mumkin.
+   - Yoki supabase.com → Dashboard → loyiha tanlang.
+
+3) Chap menyu: Authentication → Users → yangi foydalanuvchingizni toping.
+   "User UID" (uuid) ni nusxalang.
+
+4) SQL Editor oching va faylni ishlating:
+   supabase/manual/grant-admin.sql
+   
+   Undagi PASTE_USER_UUID_HERE ni o'z UUID ingiz bilan almashtiring.
+
+5) /admin ga kiring — ro'yxatdan o'tgan EMAIL va PAROL ni kiriting.
+   (Bu Supabase Auth paroli; alohida "admin parol" yo'q.)
+
+Agar Supabase SQL Editor ga kira olmasangiz, Lovable chatda so'rang:
+"Add SQL migration to grant admin role to user <UUID>" yoki loyiha egasi siz bo'lsangiz,
+Supabase loyihasini to'liq ochish huquqini tekshiring.

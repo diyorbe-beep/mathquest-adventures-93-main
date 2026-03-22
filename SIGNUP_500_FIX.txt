@@ -1,0 +1,19 @@
+Ro'yxatdan o'tishda 500 (Internal Server Error) — nima qilish kerak
+============================================================
+
+Bu xato odatda Supabase tomonda: yangi foydalanuvchi yaratilganda `profiles` yoki
+`user_roles` jadvaliga avtomatik yozish (trigger) muvaffaqiyatsiz tugaydi.
+
+1) Supabase oching (Lovable → Database / Supabase).
+
+2) SQL Editor → yangi so'rov → PASTE qiling va RUN:
+
+   Fayl: supabase/migrations/20260324120000_fix_signup_triggers.sql
+   (yoki bir xil mazmun: supabase/manual/fix-signup-triggers.sql)
+
+3) Qayta /auth dan ro'yxatdan o'ting.
+
+Agar xato qolsa:
+- Authentication → Providers: email yoqilganini tekshiring
+- Logs / Postgres logs da aniq xato matnini qidiring
+- `profiles` va `user_roles` jadvallari mavjudligini tekshiring (migratsiyalar qo'llanganmi)
