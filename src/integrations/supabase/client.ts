@@ -2,8 +2,16 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+
+if (!SUPABASE_URL?.trim() || !SUPABASE_PUBLISHABLE_KEY?.trim()) {
+  throw new Error(
+    'Supabase URL yoki kalit yo‘q. Vercel: Project → Settings → Environment Variables — ' +
+      'VITE_SUPABASE_URL va VITE_SUPABASE_PUBLISHABLE_KEY ni Production (va kerak bo‘lsa Preview) uchun qo‘shing, ' +
+      "keyin Redeploy. Mahalliy: .env faylida nusxa oling (.env.example).",
+  );
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
