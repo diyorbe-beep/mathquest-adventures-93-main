@@ -16,6 +16,9 @@ import ProfilePage from "./pages/ProfilePage";
 import MapPage from "./pages/MapPage";
 import ParentStats from "./pages/ParentStats";
 import AdminAccess from "./pages/AdminAccess";
+import ShopPage from "./pages/ShopPage";
+import ReviewPage from "./pages/ReviewPage";
+import DiagnosticPage from "./pages/DiagnosticPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -46,6 +49,9 @@ const App = () => (
               <Route path="/achievements" element={<AchievementsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/parent-stats" element={<ParentStats />} />
+              <Route path="/shop" element={<ShopPage />} />
+              <Route path="/review" element={<ReviewPage />} />
+              <Route path="/diagnostic" element={<DiagnosticPage />} />
               <Route path="/admin-login" element={<Navigate to="/admin" replace />} />
               <Route path="/admin" element={<AdminAccess />} />
               <Route path="*" element={<NotFound />} />

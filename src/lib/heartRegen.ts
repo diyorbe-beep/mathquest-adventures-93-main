@@ -1,5 +1,5 @@
-/** Server bilan mos: har soatda 1 yurak, `regenerateHearts` yangilaganda vaqt nuqta sifatida qayta boshlanadi */
-export const HEART_REGEN_MS = 60 * 60 * 1000;
+/** Har 15 daqiqada 1 yurak tiklanadi */
+export const HEART_REGEN_MS = 15 * 60 * 1000;
 
 export function getMsUntilNextHeart(hearts: number, heartsLastRegenIso: string): number | null {
   if (hearts >= 5) return null;

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { HEART_REGEN_MS } from '@/lib/heartRegen';
 
 export const useProfile = () => {
   const { user } = useAuth();
@@ -50,13 +51,21 @@ export const useProfile = () => {
       });
       // Update profile XP
       const currentXp = profileQuery.data?.xp ?? 0;
+      const currentCoins = Number((profileQuery.data as any)?.coins ?? 0);
       const newXp = currentXp + amount;
       const newLevel = Math.floor(newXp / 100) + 1;
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
-        .update({ xp: newXp, level: newLevel })
+        .update({ xp: newXp, level: newLevel, coins: currentCoins + amount })
         .eq('user_id', user.id);
       if (error) throw error;
+
+      await (supabase as any).from('coin_logs').insert({
+        user_id: user.id,
+        amount,
+        source: 'lesson_xp',
+        metadata: { lesson_id: lessonId ?? null },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
@@ -90,8 +99,8 @@ export const useProfile = () => {
       if (!user || !profileQuery.data) return;
       const lastRegen = new Date(profileQuery.data.hearts_last_regen).getTime();
       const now = Date.now();
-      const hoursPassed = (now - lastRegen) / (1000 * 60 * 60);
-      const heartsToAdd = Math.min(Math.floor(hoursPassed), 5 - profileQuery.data.hearts);
+      const regenStepsPassed = Math.floor((now - lastRegen) / HEART_REGEN_MS);
+      const heartsToAdd = Math.min(regenStepsPassed, 5 - profileQuery.data.hearts);
       if (heartsToAdd > 0) {
         await supabase
           .from('profiles')

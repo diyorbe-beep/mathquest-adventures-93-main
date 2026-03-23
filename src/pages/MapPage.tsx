@@ -3,6 +3,7 @@ import { useTopics, useLessons, useUserProgress } from '@/hooks/useLessons';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Lock, CheckCircle } from 'lucide-react';
+import { toUzbekTopicDescription, toUzbekTopicName } from '@/lib/topicI18n';
 
 const MapPage = () => {
   const { user } = useAuth();
@@ -63,11 +64,13 @@ const MapPage = () => {
                     <span className={`text-5xl ${!prevComplete ? 'grayscale' : ''}`}>{topic.icon}</span>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-extrabold text-lg text-foreground">{topic.name}</h3>
+                        <h3 className="font-extrabold text-lg text-foreground">{toUzbekTopicName(topic.name)}</h3>
                         {allComplete && <CheckCircle className="h-5 w-5 text-primary" />}
                         {!prevComplete && <Lock className="h-4 w-4 text-muted-foreground" />}
                       </div>
-                      <p className="text-sm text-muted-foreground font-semibold">{topic.description}</p>
+                      <p className="text-sm text-muted-foreground font-semibold">
+                        {topic.description ? toUzbekTopicDescription(topic.description) : ''}
+                      </p>
                       <div className="mt-2 flex items-center gap-2">
                         <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                           <div

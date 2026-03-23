@@ -1,5 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { motion, Reorder } from 'framer-motion';
+import { toUzbekOption } from '@/lib/questionI18n';
+import { isDragDropSelectMode } from '@/lib/dragDropSelectMode';
 
 interface DragDropQuestionProps {
   options: string[];
@@ -15,16 +17,7 @@ const DragDropQuestion = ({ options, correctAnswer, questionText, onAnswer, disa
   
   // Determine mode: if correct answer length < options length, it's a "select" mode
   // Otherwise it's an "order" mode
-  const correctParts = correctAnswer.split(',');
-  const q = questionText.toLowerCase();
-  const looksLikeOrdering =
-    q.includes('order') ||
-    q.includes('arrange') ||
-    q.includes('tartib') ||
-    q.includes('joylashtir') ||
-    q.includes('ketma-ket') ||
-    q.includes('surib');
-  const isSelectMode = correctParts.length < options.length && !looksLikeOrdering;
+  const isSelectMode = isDragDropSelectMode(questionText, correctAnswer, options.length);
   const isOrderMode = !isSelectMode;
 
   const toggleSelect = (item: string) => {
@@ -61,7 +54,7 @@ const DragDropQuestion = ({ options, correctAnswer, questionText, onAnswer, disa
               >
                 <div className="flex items-center gap-3">
                   <span className="text-muted-foreground text-lg">⠿</span>
-                  <span>{item}</span>
+                  <span>{toUzbekOption(item)}</span>
                 </div>
               </Reorder.Item>
             ))}
@@ -93,7 +86,7 @@ const DragDropQuestion = ({ options, correctAnswer, questionText, onAnswer, disa
                     }`}>
                       {selected ? '✓' : '○'}
                     </span>
-                    <span>{item}</span>
+                    <span>{toUzbekOption(item)}</span>
                   </div>
                 </motion.button>
               );

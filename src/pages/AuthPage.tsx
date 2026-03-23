@@ -47,6 +47,14 @@ const AuthPage = () => {
           ? (err as { message: string }).message
           : 'Nimadir xato ketdi';
       const lower = msg.toLowerCase();
+      if (
+        lower.includes('bunday foydalanuvchi nomi allaqachon mavjud') ||
+        (lower.includes('duplicate') && lower.includes('username')) ||
+        lower.includes('idx_profiles_username_lower_unique')
+      ) {
+        toast.error('Bunday nomli user bor. Boshqa nom tanlang.');
+        return;
+      }
       let hint = '';
       if (lower.includes('database error') || lower.includes('saving new user') || msg.includes('500')) {
         hint =

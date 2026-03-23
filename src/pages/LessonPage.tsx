@@ -11,17 +11,26 @@ import confetti from 'canvas-confetti';
 import { supabase } from '@/integrations/supabase/client';
 import DragDropQuestion from '@/components/DragDropQuestion';
 import HeartCountdownHint from '@/components/HeartCountdownHint';
+import EquationBuilderQuestion from '@/components/EquationBuilderQuestion';
+import TypeAnswerQuestion from '@/components/TypeAnswerQuestion';
+import NumberLineQuestion from '@/components/NumberLineQuestion';
+import { toUzbekExplanation, toUzbekOption, toUzbekQuestionText } from '@/lib/questionI18n';
+import { toUzbekLessonTitle } from '@/lib/lessonI18n';
+import { isDragDropSelectMode } from '@/lib/dragDropSelectMode';
+import { useLogQuestionAttempt } from '@/hooks/useLearningEngine';
 
 const LessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const { user } = useAuth();
   const { profile, addXp, loseHeart, regenerateHearts } = useProfile();
   const { data: questions, isLoading } = useQuestions(lessonId);
+  const logAttempt = useLogQuestionAttempt();
   const saveProgress = useSaveProgress();
   const checkAchievements = useCheckAchievements();
   const { data: allProgress } = useUserProgress();
   const navigate = useNavigate();
 
+  const [sessionQuestions, setSessionQuestions] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [total, setTotal] = useState(0);
@@ -30,19 +39,30 @@ const LessonPage = () => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [finished, setFinished] = useState(false);
   const [lessonTitle, setLessonTitle] = useState('');
+  const [topicId, setTopicId] = useState<string | null>(null);
   const [xpReward, setXpReward] = useState(10);
   const startTimeRef = useRef(Date.now());
+  const questionStartedAtRef = useRef(Date.now());
 
   useEffect(() => {
     if (lessonId) {
-      supabase.from('lessons').select('title, xp_reward').eq('id', lessonId).single().then(({ data }) => {
+      supabase.from('lessons').select('title, xp_reward, topic_id').eq('id', lessonId).single().then(({ data }) => {
         if (data) {
           setLessonTitle(data.title);
           setXpReward(data.xp_reward);
+          setTopicId(data.topic_id);
         }
       });
     }
   }, [lessonId]);
+
+  useEffect(() => {
+    if (questions?.length) {
+      setSessionQuestions([...questions]);
+      setCurrentIndex(0);
+      questionStartedAtRef.current = Date.now();
+    }
+  }, [questions]);
 
   useEffect(() => {
     if (profile) regenerateHearts.mutate();
@@ -50,17 +70,77 @@ const LessonPage = () => {
 
   if (!user) return <Navigate to="/auth" replace />;
   if (isLoading) return <div className="flex min-h-screen items-center justify-center text-xl font-bold animate-pulse text-primary">Savollar yuklanmoqda...</div>;
-  if (!questions?.length) return <div className="flex min-h-screen items-center justify-center text-xl font-bold text-muted-foreground">Savollar topilmadi</div>;
+  if (!sessionQuestions?.length) return <div className="flex min-h-screen items-center justify-center text-xl font-bold text-muted-foreground">Savollar topilmadi</div>;
 
-  const currentQuestion = questions[currentIndex];
-  const progressPercent = ((currentIndex) / questions.length) * 100;
+  const currentQuestion = sessionQuestions[currentIndex];
+  const progressPercent = ((currentIndex) / sessionQuestions.length) * 100;
   const options: string[] = Array.isArray(currentQuestion?.options) ? currentQuestion.options as string[] : [];
   const isDragDrop = currentQuestion.question_type === 'drag_drop';
+  const isEquationBuilder = currentQuestion.question_type === 'equation_builder';
+  const isTypeAnswer = currentQuestion.question_type === 'type_answer';
+  const isNumberLine = currentQuestion.question_type === 'number_line';
+
+  const normalizeAnswer = (value: string) =>
+    value
+      .trim()
+      .toLowerCase()
+      .split(',')
+      .map((x) => x.trim())
+      .join(',');
+
+  const normalizeTokens = (value: string) =>
+    value
+      .trim()
+      .toLowerCase()
+      .split(',')
+      .map((x) => x.trim())
+      .filter(Boolean);
+
+  const hasCommutativeOperator = (questionText: string, expectedTokens: string[]) => {
+    const expected = expectedTokens.join(' ');
+    return /(\+|×|\*|\bx\b)/i.test(questionText) || /(\+|×|\*|\bx\b)/i.test(expected);
+  };
+
+  const hasNonCommutativeOperator = (questionText: string, expectedTokens: string[]) => {
+    const expected = expectedTokens.join(' ');
+    return /(-|÷|\/)/i.test(questionText) || /(-|÷|\/)/i.test(expected);
+  };
+
+  const isCommutativeEquationMatch = (answer: string, correctAnswer: string, questionText: string) => {
+    const actualTokens = normalizeTokens(answer);
+    const expectedTokens = normalizeTokens(correctAnswer);
+    if (actualTokens.length !== expectedTokens.length) return false;
+
+    // If question has only +/* style operator, accept same tokens in any order.
+    const commutative = hasCommutativeOperator(questionText, expectedTokens);
+    const nonCommutative = hasNonCommutativeOperator(questionText, expectedTokens);
+    if (!commutative || nonCommutative) {
+      return actualTokens.join(',') === expectedTokens.join(',');
+    }
+
+    const counts = new Map<string, number>();
+    for (const token of expectedTokens) {
+      counts.set(token, (counts.get(token) ?? 0) + 1);
+    }
+    for (const token of actualTokens) {
+      const left = counts.get(token);
+      if (!left) return false;
+      if (left === 1) counts.delete(token);
+      else counts.set(token, left - 1);
+    }
+    return counts.size === 0;
+  };
 
   const handleAnswer = (answer: string) => {
     if (showResult) return;
     setSelectedAnswer(answer);
-    const correct_ = answer === currentQuestion.correct_answer;
+    const dragDropSelect =
+      isDragDrop && isDragDropSelectMode(currentQuestion.question_text, currentQuestion.correct_answer, options.length);
+    const correct_ =
+      isEquationBuilder || dragDropSelect
+        ? isCommutativeEquationMatch(answer, currentQuestion.correct_answer, currentQuestion.question_text)
+        : normalizeAnswer(answer) === normalizeAnswer(currentQuestion.correct_answer);
+    const timeSpentSeconds = Math.max(1, Math.round((Date.now() - questionStartedAtRef.current) / 1000));
     setIsCorrect(correct_);
     setShowResult(true);
     setTotal(prev => prev + 1);
@@ -70,19 +150,50 @@ const LessonPage = () => {
     } else {
       loseHeart.mutate();
     }
+
+    if (lessonId) {
+      logAttempt.mutate({
+        lessonId,
+        questionId: currentQuestion.id,
+        topicId,
+        selectedAnswer: answer,
+        correctAnswer: currentQuestion.correct_answer,
+        isCorrect: correct_,
+        difficulty: currentQuestion.difficulty ?? 1,
+        questionType: currentQuestion.question_type ?? 'multiple_choice',
+        timeSpentSeconds,
+      });
+    }
   };
 
   const handleContinue = async () => {
-    if (currentIndex < questions.length - 1) {
+    if (currentIndex < sessionQuestions.length - 1) {
+      // Adaptive ordering: after correct, move a harder question earlier; after wrong, easier one earlier.
+      setSessionQuestions((prev) => {
+        const nextPos = currentIndex + 1;
+        if (nextPos >= prev.length) return prev;
+        const target = isCorrect
+          ? Math.min(3, Number(currentQuestion.difficulty ?? 1) + 1)
+          : Math.max(1, Number(currentQuestion.difficulty ?? 1) - 1);
+        const candidate = prev.findIndex((q, idx) => idx > currentIndex && Number(q.difficulty ?? 1) === target);
+        if (candidate === -1 || candidate === nextPos) return prev;
+        const clone = [...prev];
+        const tmp = clone[nextPos];
+        clone[nextPos] = clone[candidate];
+        clone[candidate] = tmp;
+        return clone;
+      });
+
       setCurrentIndex(prev => prev + 1);
+      questionStartedAtRef.current = Date.now();
       setSelectedAnswer(null);
       setShowResult(false);
     } else {
       setFinished(true);
       // Calculate XP with difficulty bonus: easy=1x, medium=1.5x, hard=2x
-      const avgDifficulty = questions.reduce((s, q) => s + q.difficulty, 0) / questions.length;
+      const avgDifficulty = sessionQuestions.reduce((s, q) => s + q.difficulty, 0) / sessionQuestions.length;
       const difficultyMultiplier = avgDifficulty <= 1 ? 1 : avgDifficulty <= 2 ? 1.5 : 2;
-      const earnedXp = Math.round((correct / questions.length) * xpReward * difficultyMultiplier);
+      const earnedXp = Math.round((correct / sessionQuestions.length) * xpReward * difficultyMultiplier);
       const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
 
       await saveProgress.mutateAsync({
@@ -101,7 +212,7 @@ const LessonPage = () => {
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
 
       const completedCount = (allProgress?.filter(p => p.completed).length ?? 0) + 1;
-      const perfectCount = (allProgress?.filter(p => Number(p.best_accuracy) === 100).length ?? 0) + (correct === questions.length ? 1 : 0);
+      const perfectCount = (allProgress?.filter(p => Number(p.best_accuracy) === 100).length ?? 0) + (correct === sessionQuestions.length ? 1 : 0);
 
       await checkAchievements.mutateAsync({
         totalXp: (profile?.xp ?? 0) + earnedXp,
@@ -114,9 +225,9 @@ const LessonPage = () => {
 
   if (finished) {
     const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
-    const avgDifficulty = questions.reduce((s, q) => s + q.difficulty, 0) / questions.length;
+    const avgDifficulty = sessionQuestions.reduce((s, q) => s + q.difficulty, 0) / sessionQuestions.length;
     const difficultyMultiplier = avgDifficulty <= 1 ? 1 : avgDifficulty <= 2 ? 1.5 : 2;
-    const earnedXp = Math.round((correct / questions.length) * xpReward * difficultyMultiplier);
+    const earnedXp = Math.round((correct / sessionQuestions.length) * xpReward * difficultyMultiplier);
     const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
     const mins = Math.floor(timeSpent / 60);
     const secs = timeSpent % 60;
@@ -135,7 +246,7 @@ const LessonPage = () => {
           <h2 className="text-2xl font-black text-foreground mb-2" style={{ lineHeight: '1.1' }}>
             {accuracy === 100 ? 'Mukammal natija!' : accuracy >= 70 ? 'Ajoyib ish!' : 'Mashq qilishda davom eting!'}
           </h2>
-          <p className="text-muted-foreground font-semibold mb-6">{lessonTitle}</p>
+          <p className="text-muted-foreground font-semibold mb-6">{toUzbekLessonTitle(lessonTitle)}</p>
 
           <div className="grid grid-cols-4 gap-3 mb-6">
             <div className="rounded-xl bg-quest-green/10 p-3">
@@ -214,11 +325,14 @@ const LessonPage = () => {
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
               <p className="text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wider">
-                {currentIndex + 1}/{questions.length}-savol
+                {currentIndex + 1}/{sessionQuestions.length}-savol
                 {isDragDrop && <span className="ml-2 text-quest-purple">🧩 Surib qo‘yish</span>}
+                {isEquationBuilder && <span className="ml-2 text-quest-blue">🧱 Tenglama tuzish</span>}
+                {isTypeAnswer && <span className="ml-2 text-quest-orange">⌨️ Javob yozish</span>}
+                {isNumberLine && <span className="ml-2 text-quest-green">📏 Son o‘qi</span>}
               </p>
               <h2 className="text-2xl font-black text-foreground mb-8 text-balance" style={{ lineHeight: '1.2' }}>
-                {currentQuestion.question_text}
+                {toUzbekQuestionText(currentQuestion.question_text)}
               </h2>
 
               {isDragDrop ? (
@@ -226,6 +340,24 @@ const LessonPage = () => {
                   options={options}
                   correctAnswer={currentQuestion.correct_answer}
                   questionText={currentQuestion.question_text}
+                  onAnswer={handleAnswer}
+                  disabled={showResult}
+                />
+              ) : isEquationBuilder ? (
+                <EquationBuilderQuestion
+                  options={options}
+                  correctAnswer={currentQuestion.correct_answer}
+                  onAnswer={handleAnswer}
+                  disabled={showResult}
+                />
+              ) : isTypeAnswer ? (
+                <TypeAnswerQuestion
+                  onAnswer={handleAnswer}
+                  disabled={showResult}
+                />
+              ) : isNumberLine ? (
+                <NumberLineQuestion
+                  options={options}
                   onAnswer={handleAnswer}
                   disabled={showResult}
                 />
@@ -255,7 +387,7 @@ const LessonPage = () => {
                         <span className="mr-3 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-sm font-black text-muted-foreground">
                           {String.fromCharCode(65 + i)}
                         </span>
-                        {option}
+                        {toUzbekOption(option)}
                       </motion.button>
                     );
                   })}
@@ -280,7 +412,17 @@ const LessonPage = () => {
                   {isCorrect ? '🎉 To‘g‘ri!' : '❌ Noto‘g‘ri'}
                 </p>
                 {!isCorrect && currentQuestion.explanation && (
-                  <p className="text-sm text-muted-foreground font-semibold mt-1">{currentQuestion.explanation}</p>
+                  <div className="mt-1">
+                    {toUzbekExplanation(currentQuestion.explanation)
+                      .split(/[.;]\s+/)
+                      .filter(Boolean)
+                      .slice(0, 3)
+                      .map((step, i) => (
+                        <p key={i} className="text-sm text-muted-foreground font-semibold">
+                          {i + 1}) {step}
+                        </p>
+                      ))}
+                  </div>
                 )}
               </div>
               <button

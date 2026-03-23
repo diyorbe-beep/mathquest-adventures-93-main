@@ -3,6 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLessons, useTopics, useUserProgress } from '@/hooks/useLessons';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Lock, CheckCircle, Circle } from 'lucide-react';
+import { toUzbekLessonDescription, toUzbekLessonTitle } from '@/lib/lessonI18n';
+import { toUzbekTopicDescription, toUzbekTopicName } from '@/lib/topicI18n';
 
 const TopicMap = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -37,8 +39,10 @@ const TopicMap = () => {
           <div className="flex items-center gap-3">
             <span className="text-3xl">{topic.icon}</span>
             <div>
-              <h1 className="font-extrabold text-foreground text-lg leading-tight">{topic.name}</h1>
-              <p className="text-xs font-semibold text-muted-foreground">{topic.description}</p>
+              <h1 className="font-extrabold text-foreground text-lg leading-tight">{toUzbekTopicName(topic.name)}</h1>
+              <p className="text-xs font-semibold text-muted-foreground">
+                {topic.description ? toUzbekTopicDescription(topic.description) : ''}
+              </p>
             </div>
           </div>
         </div>
@@ -86,7 +90,7 @@ const TopicMap = () => {
                   )}
                 </motion.button>
                 <p className={`mt-2 text-center text-xs font-bold max-w-[120px] ${unlocked ? 'text-foreground' : 'text-muted-foreground'}`}>
-                  {lesson.title}
+                  {toUzbekLessonTitle(lesson.title)}
                 </p>
                 <p className="text-center text-xs text-muted-foreground">+{lesson.xp_reward} XP</p>
               </motion.div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users, BookOpen, HelpCircle, BarChart3, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, BookOpen, HelpCircle, BarChart3, Plus, Trash2, Pencil } from 'lucide-react';
 import {
   useAdminUsers,
   useAdminUserRoles,
@@ -9,13 +9,18 @@ import {
   useAdminQuestions,
   useAdminAnalytics,
   useCreateLesson,
+  useUpdateLesson,
   useDeleteLesson,
   useCreateQuestion,
+  useUpdateQuestion,
   useDeleteQuestion,
   useAssignRole,
 } from '@/hooks/useAdmin';
 import { useTopics } from '@/hooks/useLessons';
 import { getAvatarEmoji } from '@/lib/avatars';
+import { toUzbekQuestionText } from '@/lib/questionI18n';
+import { toUzbekLessonDescription, toUzbekLessonTitle } from '@/lib/lessonI18n';
+import { toUzbekTopicName } from '@/lib/topicI18n';
 import { toast } from 'sonner';
 
 type Tab = 'analytics' | 'users' | 'lessons' | 'questions';
@@ -24,6 +29,14 @@ const roleLabels: Record<string, string> = {
   admin: 'Administrator',
   parent: 'Ota-ona',
   student: 'O‘quvchi',
+};
+
+const questionTypeLabels: Record<string, string> = {
+  multiple_choice: 'Ko‘p tanlov',
+  drag_drop: 'Surib qo‘yish',
+  equation_builder: 'Tenglama tuzish',
+  type_answer: 'Javob yozish',
+  number_line: 'Son o‘qi',
 };
 
 const AdminPage = () => {
@@ -174,19 +187,31 @@ const LessonsTab = () => {
   const { data: lessons, isLoading } = useAdminLessons();
   const { data: topics } = useTopics();
   const createLesson = useCreateLesson();
+  const updateLesson = useUpdateLesson();
   const deleteLesson = useDeleteLesson();
   const [showForm, setShowForm] = useState(false);
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
   const [form, setForm] = useState({ title: '', topic_id: '', level_number: 1, xp_reward: 10, sort_order: 1, description: '' });
 
   if (isLoading) return <div className="animate-pulse text-center py-8 text-primary font-bold">Darslar yuklanmoqda...</div>;
 
-  const handleCreate = async () => {
+  const resetForm = () => {
+    setEditingLessonId(null);
+    setShowForm(false);
+    setForm({ title: '', topic_id: '', level_number: 1, xp_reward: 10, sort_order: 1, description: '' });
+  };
+
+  const handleSave = async () => {
     if (!form.title || !form.topic_id) { toast.error('Majburiy maydonlarni to‘ldiring'); return; }
     try {
-      await createLesson.mutateAsync(form);
-      toast.success('Dars yaratildi!');
-      setShowForm(false);
-      setForm({ title: '', topic_id: '', level_number: 1, xp_reward: 10, sort_order: 1, description: '' });
+      if (editingLessonId) {
+        await updateLesson.mutateAsync({ id: editingLessonId, updates: form });
+        toast.success('Dars yangilandi!');
+      } else {
+        await createLesson.mutateAsync(form);
+        toast.success('Dars yaratildi!');
+      }
+      resetForm();
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -197,10 +222,16 @@ const LessonsTab = () => {
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm font-semibold text-muted-foreground">{lessons?.length ?? 0} ta dars</p>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            if (showForm) {
+              resetForm();
+            } else {
+              setShowForm(true);
+            }
+          }}
           className="flex items-center gap-1 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-md transition-all active:scale-[0.97]"
         >
-          <Plus className="h-4 w-4" /> Dars qo‘shish
+          <Plus className="h-4 w-4" /> {editingLessonId ? 'Tahrirlash' : 'Dars qo‘shish'}
         </button>
       </div>
 
@@ -222,7 +253,11 @@ const LessonsTab = () => {
             className="w-full rounded-xl border-2 border-border bg-background px-4 py-2.5 font-semibold text-foreground focus:border-primary focus:outline-none"
           >
             <option value="">Mavzuni tanlang</option>
-            {topics?.map(t => <option key={t.id} value={t.id}>{t.icon} {t.name}</option>)}
+            {topics?.map(t => (
+              <option key={t.id} value={t.id}>
+                {t.icon} {toUzbekTopicName(t.name)}
+              </option>
+            ))}
           </select>
           <div className="grid grid-cols-3 gap-2">
             <input type="number" placeholder="Daraja №" value={form.level_number}
@@ -235,9 +270,13 @@ const LessonsTab = () => {
               onChange={e => setForm(f => ({ ...f, sort_order: +e.target.value }))}
               className="rounded-xl border-2 border-border bg-background px-3 py-2 font-semibold text-foreground focus:border-primary focus:outline-none" />
           </div>
-          <button onClick={handleCreate} disabled={createLesson.isPending}
+          <button onClick={handleSave} disabled={createLesson.isPending || updateLesson.isPending}
             className="w-full rounded-xl bg-primary py-2.5 font-bold text-primary-foreground shadow-md transition-all active:scale-[0.97] disabled:opacity-60">
-            {createLesson.isPending ? 'Yaratilmoqda...' : 'Dars yaratish'}
+            {createLesson.isPending || updateLesson.isPending
+              ? 'Saqlanmoqda...'
+              : editingLessonId
+              ? 'Darsni saqlash'
+              : 'Dars yaratish'}
           </button>
         </motion.div>
       )}
@@ -246,11 +285,34 @@ const LessonsTab = () => {
         {lessons?.map(lesson => (
           <div key={lesson.id} className="rounded-2xl bg-card p-4 shadow-sm flex items-center gap-4">
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-foreground truncate">{lesson.title}</p>
+              <p className="font-bold text-foreground truncate">{toUzbekLessonTitle(lesson.title)}</p>
+              {lesson.description && (
+                <p className="text-xs text-muted-foreground truncate">
+                  {toUzbekLessonDescription(lesson.description)}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground font-semibold">
-                {lesson.level_number}-daraja · +{lesson.xp_reward} XP · {(lesson as any).topics?.icon} {(lesson as any).topics?.name}
+                {lesson.level_number}-daraja · +{lesson.xp_reward} XP · {(lesson as any).topics?.icon}{' '}
+                {toUzbekTopicName((lesson as any).topics?.name)}
               </p>
             </div>
+            <button
+              onClick={() => {
+                setEditingLessonId(lesson.id);
+                setForm({
+                  title: lesson.title ?? '',
+                  topic_id: lesson.topic_id ?? '',
+                  level_number: lesson.level_number ?? 1,
+                  xp_reward: lesson.xp_reward ?? 10,
+                  sort_order: lesson.sort_order ?? 1,
+                  description: lesson.description ?? '',
+                });
+                setShowForm(true);
+              }}
+              className="rounded-lg p-2 text-quest-blue hover:bg-quest-blue/10 transition-colors"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
             <button
               onClick={() => { deleteLesson.mutate(lesson.id); toast.success('O‘chirildi'); }}
               className="rounded-lg p-2 text-destructive hover:bg-destructive/10 transition-colors"
@@ -270,22 +332,29 @@ const QuestionsTab = () => {
   const [selectedLesson, setSelectedLesson] = useState<string>('');
   const { data: questions, isLoading } = useAdminQuestions(selectedLesson || undefined);
   const createQuestion = useCreateQuestion();
+  const updateQuestion = useUpdateQuestion();
   const deleteQuestion = useDeleteQuestion();
   const [showForm, setShowForm] = useState(false);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [form, setForm] = useState({
     question_text: '', correct_answer: '', explanation: '',
     options: ['', '', '', ''],
     difficulty: 1, sort_order: 1, question_type: 'multiple_choice',
   });
 
-  const handleCreate = async () => {
+  const resetForm = () => {
+    setEditingQuestionId(null);
+    setShowForm(false);
+    setForm({ question_text: '', correct_answer: '', explanation: '', options: ['', '', '', ''], difficulty: 1, sort_order: 1, question_type: 'multiple_choice' });
+  };
+
+  const handleSave = async () => {
     if (!selectedLesson || !form.question_text || !form.correct_answer) {
       toast.error('Majburiy maydonlarni to‘ldiring');
       return;
     }
     try {
-      await createQuestion.mutateAsync({
-        lesson_id: selectedLesson,
+      const payload = {
         question_text: form.question_text,
         question_type: form.question_type,
         options: form.options.filter(Boolean),
@@ -293,10 +362,18 @@ const QuestionsTab = () => {
         explanation: form.explanation || undefined,
         difficulty: form.difficulty,
         sort_order: form.sort_order,
-      });
-      toast.success('Savol yaratildi!');
-      setShowForm(false);
-      setForm({ question_text: '', correct_answer: '', explanation: '', options: ['', '', '', ''], difficulty: 1, sort_order: 1, question_type: 'multiple_choice' });
+      };
+      if (editingQuestionId) {
+        await updateQuestion.mutateAsync({ id: editingQuestionId, updates: payload });
+        toast.success('Savol yangilandi!');
+      } else {
+        await createQuestion.mutateAsync({
+          lesson_id: selectedLesson,
+          ...payload,
+        });
+        toast.success('Savol yaratildi!');
+      }
+      resetForm();
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -311,18 +388,24 @@ const QuestionsTab = () => {
           className="w-full rounded-xl border-2 border-border bg-background px-4 py-2.5 font-semibold text-foreground focus:border-primary focus:outline-none"
         >
           <option value="">Barcha darslar</option>
-          {lessons?.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
+          {lessons?.map(l => <option key={l.id} value={l.id}>{toUzbekLessonTitle(l.title)}</option>)}
         </select>
       </div>
 
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm font-semibold text-muted-foreground">{questions?.length ?? 0} ta savol</p>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            if (showForm) {
+              resetForm();
+            } else {
+              setShowForm(true);
+            }
+          }}
           disabled={!selectedLesson}
           className="flex items-center gap-1 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-md transition-all active:scale-[0.97] disabled:opacity-50"
         >
-          <Plus className="h-4 w-4" /> Savol qo‘shish
+          <Plus className="h-4 w-4" /> {editingQuestionId ? 'Tahrirlash' : 'Savol qo‘shish'}
         </button>
       </div>
 
@@ -357,6 +440,9 @@ const QuestionsTab = () => {
               className="rounded-xl border-2 border-border bg-background px-3 py-2 font-semibold text-foreground focus:border-primary focus:outline-none">
               <option value="multiple_choice">Ko‘p tanlov</option>
               <option value="drag_drop">Surib qo‘yish</option>
+              <option value="equation_builder">Tenglama tuzish (blok)</option>
+              <option value="type_answer">Javob yozish</option>
+              <option value="number_line">Son o‘qi (slider)</option>
             </select>
             <select value={form.difficulty} onChange={e => setForm(f => ({ ...f, difficulty: +e.target.value }))}
               className="rounded-xl border-2 border-border bg-background px-3 py-2 font-semibold text-foreground focus:border-primary focus:outline-none">
@@ -369,10 +455,18 @@ const QuestionsTab = () => {
               className="rounded-xl border-2 border-border bg-background px-3 py-2 font-semibold text-foreground focus:border-primary focus:outline-none" />
           </div>
 
-          <button onClick={handleCreate} disabled={createQuestion.isPending}
+          <button onClick={handleSave} disabled={createQuestion.isPending || updateQuestion.isPending}
             className="w-full rounded-xl bg-primary py-2.5 font-bold text-primary-foreground shadow-md transition-all active:scale-[0.97] disabled:opacity-60">
-            {createQuestion.isPending ? 'Yaratilmoqda...' : 'Savol yaratish'}
+            {createQuestion.isPending || updateQuestion.isPending
+              ? 'Saqlanmoqda...'
+              : editingQuestionId
+              ? 'Savolni saqlash'
+              : 'Savol yaratish'}
           </button>
+          <p className="text-xs font-semibold text-muted-foreground">
+            `equation_builder` uchun `correct_answer`: vergul bilan (masalan: `10,-,4`).
+            `number_line` uchun `options`: `min:0`, `max:12`, `step:1`.
+          </p>
         </motion.div>
       )}
 
@@ -383,11 +477,32 @@ const QuestionsTab = () => {
           {questions?.map(q => (
             <div key={q.id} className="rounded-2xl bg-card p-4 shadow-sm flex items-start gap-3">
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-foreground text-sm">{q.question_text}</p>
+                <p className="font-bold text-foreground text-sm">{toUzbekQuestionText(q.question_text)}</p>
                 <p className="text-xs text-muted-foreground font-semibold mt-1">
                   ✅ {q.correct_answer} · {q.question_type} · Qiyinlik: {q.difficulty}
                 </p>
               </div>
+              <button
+                onClick={() => {
+                  setEditingQuestionId(q.id);
+                  if (q.lesson_id) setSelectedLesson(q.lesson_id);
+                  const currentOptions = Array.isArray(q.options) ? [...(q.options as string[])] : [];
+                  while (currentOptions.length < 4) currentOptions.push('');
+                  setForm({
+                    question_text: q.question_text ?? '',
+                    correct_answer: q.correct_answer ?? '',
+                    explanation: q.explanation ?? '',
+                    options: currentOptions.slice(0, 4),
+                    difficulty: q.difficulty ?? 1,
+                    sort_order: q.sort_order ?? 1,
+                    question_type: q.question_type ?? 'multiple_choice',
+                  });
+                  setShowForm(true);
+                }}
+                className="rounded-lg p-2 text-quest-blue hover:bg-quest-blue/10 transition-colors shrink-0"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
               <button
                 onClick={() => { deleteQuestion.mutate(q.id); toast.success('O‘chirildi'); }}
                 className="rounded-lg p-2 text-destructive hover:bg-destructive/10 transition-colors shrink-0"

@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { useSkillMastery, useReviewDueCount } from '@/hooks/useLearningEngine';
+import { toUzbekTopicName } from '@/lib/topicI18n';
 
 const xpSourceLabel: Record<string, string> = {
   dars: 'Dars',
@@ -17,6 +19,8 @@ const ParentStats = () => {
   const { profile } = useProfile();
   const { data: progress } = useUserProgress();
   const navigate = useNavigate();
+  const { data: mastery } = useSkillMastery();
+  const { data: reviewDue = 0 } = useReviewDueCount();
 
   const { data: xpLogs } = useQuery({
     queryKey: ['xp_logs', user?.id],
@@ -117,6 +121,34 @@ const ParentStats = () => {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Weak Skills */}
+          <div className="rounded-2xl bg-card p-6 shadow-md">
+            <h3 className="font-extrabold text-foreground mb-4">Zaif ko‘nikmalar</h3>
+            {mastery && mastery.length > 0 ? (
+              <div className="space-y-2">
+                {[...mastery]
+                  .sort((a, b) => Number(a.mastery_score ?? 0) - Number(b.mastery_score ?? 0))
+                  .slice(0, 5)
+                  .map((m) => (
+                    <div key={m.id} className="rounded-xl bg-background border border-border px-3 py-2">
+                      <p className="font-bold text-sm text-foreground">{m.topics?.icon ?? '📘'} {toUzbekTopicName(m.topics?.name ?? 'Mavzu')}</p>
+                      <p className="text-xs font-semibold text-muted-foreground">
+                        Mastery: {m.mastery_score}% · Urinish: {m.attempts} · To‘g‘ri: {m.correct_count}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground font-semibold">Hali mastery ma’lumotlari yig‘ilmagan.</p>
+            )}
+            <button
+              onClick={() => navigate('/review')}
+              className="mt-4 w-full rounded-xl bg-primary py-2.5 font-bold text-primary-foreground shadow-md"
+            >
+              Takrorlashga o‘tish ({reviewDue})
+            </button>
           </div>
 
           {/* Recent Activity */}
