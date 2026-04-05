@@ -65,7 +65,7 @@ const ParentStats = () => {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto flex items-center gap-4 px-4 py-3">
-          <button onClick={() => navigate('/dashboard')} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
+          <button onClick={() => { navigate('/dashboard'); }} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-xl font-extrabold text-foreground">📊 O‘qish statistikasi</h1>
@@ -144,7 +144,7 @@ const ParentStats = () => {
               <p className="text-sm text-muted-foreground font-semibold">Hali mastery ma’lumotlari yig‘ilmagan.</p>
             )}
             <button
-              onClick={() => navigate('/review')}
+              onClick={() => { navigate('/review'); }}
               className="mt-4 w-full rounded-xl bg-primary py-2.5 font-bold text-primary-foreground shadow-md"
             >
               Takrorlashga o‘tish ({reviewDue})

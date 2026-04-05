@@ -27,7 +27,7 @@ const ReviewPage = () => {
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border">
           <div className="container mx-auto flex items-center gap-4 px-4 py-3 max-w-lg">
-            <button onClick={() => navigate('/dashboard')} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
+            <button onClick={() => { navigate('/dashboard'); }} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
               <ArrowLeft className="h-5 w-5" />
             </button>
             <h1 className="text-xl font-extrabold text-foreground">🔁 Takrorlash</h1>
@@ -65,7 +65,7 @@ const ReviewPage = () => {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto flex items-center gap-4 px-4 py-3 max-w-lg">
-          <button onClick={() => navigate('/dashboard')} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
+          <button onClick={() => { navigate('/dashboard'); }} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-xl font-extrabold text-foreground">🔁 Takrorlash</h1>
@@ -91,7 +91,7 @@ const ReviewPage = () => {
           <div className="space-y-3">
             <input
               value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
+              onChange={(e) => { setAnswer(e.target.value); }}
               className="w-full rounded-xl border-2 border-border bg-card px-4 py-3 font-bold text-foreground"
               placeholder="Javobni kiriting"
               disabled={result !== null}

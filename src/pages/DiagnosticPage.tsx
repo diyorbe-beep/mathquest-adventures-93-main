@@ -82,7 +82,7 @@ const DiagnosticPage = () => {
           <p className="text-5xl mb-2">🧪</p>
           <h2 className="text-2xl font-black text-foreground">Diagnostika tugadi</h2>
           <p className="mt-2 text-muted-foreground font-semibold">Natija: {correct}/{questions.length} ({score}%)</p>
-          <button onClick={() => navigate('/dashboard')} className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground">
+          <button onClick={() => { navigate('/dashboard'); }} className="mt-5 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground">
             Dashboardga qaytish
           </button>
         </div>
@@ -103,7 +103,7 @@ const DiagnosticPage = () => {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto flex items-center gap-4 px-4 py-3 max-w-lg">
-          <button onClick={() => navigate('/dashboard')} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
+          <button onClick={() => { navigate('/dashboard'); }} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-xl font-extrabold text-foreground">🧪 Diagnostika testi</h1>

@@ -33,7 +33,7 @@ const TopicMap = () => {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto flex items-center gap-4 px-4 py-3">
-          <button onClick={() => navigate('/dashboard')} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
+          <button onClick={() => { navigate('/dashboard'); }} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-3">
@@ -71,7 +71,7 @@ const TopicMap = () => {
                 <motion.button
                   whileHover={unlocked ? { scale: 1.08 } : {}}
                   whileTap={unlocked ? { scale: 0.95 } : {}}
-                  onClick={() => unlocked && navigate(`/lesson/${lesson.id}`)}
+                  onClick={() => { unlocked && navigate(`/lesson/${lesson.id}`); }}
                   disabled={!unlocked}
                   className={`relative flex h-20 w-20 items-center justify-center rounded-full border-4 shadow-lg transition-all ${
                     completed

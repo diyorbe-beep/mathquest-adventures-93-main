@@ -72,7 +72,7 @@ const DragDropQuestion = ({ options, correctAnswer, questionText, onAnswer, disa
                 <motion.button
                   key={item}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => toggleSelect(item)}
+                  onClick={() => { toggleSelect(item); }}
                   disabled={disabled}
                   className={`w-full rounded-2xl border-2 px-5 py-4 text-left font-bold text-foreground transition-all ${
                     selected

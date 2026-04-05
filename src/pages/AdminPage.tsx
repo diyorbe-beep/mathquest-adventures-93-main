@@ -54,7 +54,7 @@ const AdminPage = () => {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto flex items-center gap-4 px-4 py-3">
-          <button onClick={() => navigate('/dashboard')} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
+          <button onClick={() => { navigate('/dashboard'); }} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-xl font-extrabold text-foreground">⚙️ Administrator paneli</h1>
@@ -63,7 +63,7 @@ const AdminPage = () => {
           {tabs.map(t => (
             <button
               key={t.key}
-              onClick={() => setTab(t.key)}
+              onClick={() => { setTab(t.key); }}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all whitespace-nowrap ${
                 tab === t.key ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:bg-muted'
               }`}
@@ -244,12 +244,12 @@ const LessonsTab = () => {
           <input
             placeholder="Dars nomi"
             value={form.title}
-            onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+            onChange={e => { setForm(f => ({ ...f, title: e.target.value })); }}
             className="w-full rounded-xl border-2 border-border bg-background px-4 py-2.5 font-semibold text-foreground focus:border-primary focus:outline-none"
           />
           <select
             value={form.topic_id}
-            onChange={e => setForm(f => ({ ...f, topic_id: e.target.value }))}
+            onChange={e => { setForm(f => ({ ...f, topic_id: e.target.value })); }}
             className="w-full rounded-xl border-2 border-border bg-background px-4 py-2.5 font-semibold text-foreground focus:border-primary focus:outline-none"
           >
             <option value="">Mavzuni tanlang</option>
@@ -261,13 +261,13 @@ const LessonsTab = () => {
           </select>
           <div className="grid grid-cols-3 gap-2">
             <input type="number" placeholder="Daraja №" value={form.level_number}
-              onChange={e => setForm(f => ({ ...f, level_number: +e.target.value }))}
+              onChange={e => { setForm(f => ({ ...f, level_number: +e.target.value })); }}
               className="rounded-xl border-2 border-border bg-background px-3 py-2 font-semibold text-foreground focus:border-primary focus:outline-none" />
             <input type="number" placeholder="XP" value={form.xp_reward}
-              onChange={e => setForm(f => ({ ...f, xp_reward: +e.target.value }))}
+              onChange={e => { setForm(f => ({ ...f, xp_reward: +e.target.value })); }}
               className="rounded-xl border-2 border-border bg-background px-3 py-2 font-semibold text-foreground focus:border-primary focus:outline-none" />
             <input type="number" placeholder="Tartib" value={form.sort_order}
-              onChange={e => setForm(f => ({ ...f, sort_order: +e.target.value }))}
+              onChange={e => { setForm(f => ({ ...f, sort_order: +e.target.value })); }}
               className="rounded-xl border-2 border-border bg-background px-3 py-2 font-semibold text-foreground focus:border-primary focus:outline-none" />
           </div>
           <button onClick={handleSave} disabled={createLesson.isPending || updateLesson.isPending}
@@ -384,7 +384,7 @@ const QuestionsTab = () => {
       <div className="mb-4">
         <select
           value={selectedLesson}
-          onChange={e => setSelectedLesson(e.target.value)}
+          onChange={e => { setSelectedLesson(e.target.value); }}
           className="w-full rounded-xl border-2 border-border bg-background px-4 py-2.5 font-semibold text-foreground focus:border-primary focus:outline-none"
         >
           <option value="">Barcha darslar</option>
@@ -416,7 +416,7 @@ const QuestionsTab = () => {
           className="rounded-2xl bg-card p-5 shadow-md mb-4 space-y-3"
         >
           <input placeholder="Savol matni" value={form.question_text}
-            onChange={e => setForm(f => ({ ...f, question_text: e.target.value }))}
+            onChange={e => { setForm(f => ({ ...f, question_text: e.target.value })); }}
             className="w-full rounded-xl border-2 border-border bg-background px-4 py-2.5 font-semibold text-foreground focus:border-primary focus:outline-none" />
           
           <div className="grid grid-cols-2 gap-2">
@@ -428,15 +428,15 @@ const QuestionsTab = () => {
           </div>
 
           <input placeholder="To‘g‘ri javob" value={form.correct_answer}
-            onChange={e => setForm(f => ({ ...f, correct_answer: e.target.value }))}
+            onChange={e => { setForm(f => ({ ...f, correct_answer: e.target.value })); }}
             className="w-full rounded-xl border-2 border-border bg-background px-4 py-2.5 font-semibold text-foreground focus:border-primary focus:outline-none" />
           
           <input placeholder="Izoh (ixtiyoriy)" value={form.explanation}
-            onChange={e => setForm(f => ({ ...f, explanation: e.target.value }))}
+            onChange={e => { setForm(f => ({ ...f, explanation: e.target.value })); }}
             className="w-full rounded-xl border-2 border-border bg-background px-4 py-2.5 font-semibold text-foreground focus:border-primary focus:outline-none" />
 
           <div className="grid grid-cols-3 gap-2">
-            <select value={form.question_type} onChange={e => setForm(f => ({ ...f, question_type: e.target.value }))}
+            <select value={form.question_type} onChange={e => { setForm(f => ({ ...f, question_type: e.target.value })); }}
               className="rounded-xl border-2 border-border bg-background px-3 py-2 font-semibold text-foreground focus:border-primary focus:outline-none">
               <option value="multiple_choice">Ko‘p tanlov</option>
               <option value="drag_drop">Surib qo‘yish</option>
@@ -444,14 +444,14 @@ const QuestionsTab = () => {
               <option value="type_answer">Javob yozish</option>
               <option value="number_line">Son o‘qi (slider)</option>
             </select>
-            <select value={form.difficulty} onChange={e => setForm(f => ({ ...f, difficulty: +e.target.value }))}
+            <select value={form.difficulty} onChange={e => { setForm(f => ({ ...f, difficulty: +e.target.value })); }}
               className="rounded-xl border-2 border-border bg-background px-3 py-2 font-semibold text-foreground focus:border-primary focus:outline-none">
               <option value={1}>Oson</option>
               <option value={2}>O‘rta</option>
               <option value={3}>Qiyin</option>
             </select>
             <input type="number" placeholder="Tartib" value={form.sort_order}
-              onChange={e => setForm(f => ({ ...f, sort_order: +e.target.value }))}
+              onChange={e => { setForm(f => ({ ...f, sort_order: +e.target.value })); }}
               className="rounded-xl border-2 border-border bg-background px-3 py-2 font-semibold text-foreground focus:border-primary focus:outline-none" />
           </div>
 

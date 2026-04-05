@@ -130,7 +130,7 @@ const AdminAccess = () => {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); }}
               placeholder="siz@email.com"
               required
               autoComplete="username"
@@ -142,7 +142,7 @@ const AdminAccess = () => {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); }}
               placeholder="••••••••"
               required
               minLength={6}

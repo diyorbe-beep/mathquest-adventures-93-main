@@ -6,8 +6,8 @@ export function useNextHeartCountdown(hearts: number | undefined, heartsLastRege
   const [, setTick] = useState(0);
 
   useEffect(() => {
-    const id = window.setInterval(() => setTick((t) => t + 1), 1000);
-    return () => window.clearInterval(id);
+    const id = window.setInterval(() => { setTick((t) => t + 1); }, 1000);
+    return () => { window.clearInterval(id); };
   }, []);
 
   if (hearts === undefined || !heartsLastRegen) return null;

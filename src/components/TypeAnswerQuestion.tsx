@@ -17,7 +17,7 @@ const TypeAnswerQuestion = ({ onAnswer, disabled }: TypeAnswerQuestionProps) => 
 
       <Input
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => { setValue(e.target.value); }}
         placeholder="Javobni yozing..."
         inputMode="numeric"
         disabled={disabled}
@@ -26,7 +26,7 @@ const TypeAnswerQuestion = ({ onAnswer, disabled }: TypeAnswerQuestionProps) => 
 
       <motion.button
         whileTap={{ scale: 0.97 }}
-        onClick={() => onAnswer(normalized)}
+        onClick={() => { onAnswer(normalized); }}
         disabled={disabled || normalized.length === 0}
         className="w-full rounded-xl bg-primary py-3.5 font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl disabled:opacity-50"
       >

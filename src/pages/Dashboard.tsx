@@ -126,16 +126,16 @@ const Dashboard = () => {
 
           {/* Navigation Grid */}
           <motion.div variants={stagger.item} className="grid grid-cols-2 gap-4 mb-8">
-            <NavCard icon="🗺️" title="Sarguzasht xaritasi" subtitle="Sarguzashtni davom eting" onClick={() => navigate('/map')} bgClass="bg-gradient-to-br from-quest-green/10 to-quest-blue/10" />
-            <NavCard icon="🏆" title="Reyting" subtitle="Eng yaxshilarni ko‘ring" onClick={() => navigate('/leaderboard')} bgClass="bg-gradient-to-br from-quest-orange/10 to-quest-yellow/10" />
-            <NavCard icon="🎖️" title="Yutuqlar" subtitle={`${progress?.filter(p => p.completed).length ?? 0} ta olingan`} onClick={() => navigate('/achievements')} bgClass="bg-gradient-to-br from-quest-purple/10 to-quest-pink/10" />
-            <NavCard icon="👤" title="Mening profilim" subtitle="Avatarni sozlash" onClick={() => navigate('/profile')} bgClass="bg-gradient-to-br from-quest-pink/10 to-quest-red/10" />
-            <NavCard icon="🛍️" title="Magazin" subtitle="Coinlarga xarid qiling" onClick={() => navigate('/shop')} bgClass="bg-gradient-to-br from-quest-yellow/10 to-quest-orange/10" />
-            <NavCard icon="🔁" title="Takrorlash" subtitle={reviewDue > 0 ? `${reviewDue} ta savol kutmoqda` : 'Bugun navbat yo‘q'} onClick={() => navigate('/review')} bgClass="bg-gradient-to-br from-quest-green/10 to-quest-teal/10" />
-            <NavCard icon="🧪" title="Diagnostika" subtitle="Boshlang‘ich darajani aniqlash" onClick={() => navigate('/diagnostic')} bgClass="bg-gradient-to-br from-quest-purple/10 to-quest-blue/10" />
-            <NavCard icon="📊" title="O‘qish statistikasi" subtitle="Taraqqiyotni kuzating" onClick={() => navigate('/parent-stats')} bgClass="bg-gradient-to-br from-quest-blue/10 to-quest-green/10" />
+            <NavCard icon="🗺️" title="Sarguzasht xaritasi" subtitle="Sarguzashtni davom eting" onClick={() => { navigate('/map'); }} bgClass="bg-gradient-to-br from-quest-green/10 to-quest-blue/10" />
+            <NavCard icon="🏆" title="Reyting" subtitle="Eng yaxshilarni ko‘ring" onClick={() => { navigate('/leaderboard'); }} bgClass="bg-gradient-to-br from-quest-orange/10 to-quest-yellow/10" />
+            <NavCard icon="🎖️" title="Yutuqlar" subtitle={`${progress?.filter(p => p.completed).length ?? 0} ta olingan`} onClick={() => { navigate('/achievements'); }} bgClass="bg-gradient-to-br from-quest-purple/10 to-quest-pink/10" />
+            <NavCard icon="👤" title="Mening profilim" subtitle="Avatarni sozlash" onClick={() => { navigate('/profile'); }} bgClass="bg-gradient-to-br from-quest-pink/10 to-quest-red/10" />
+            <NavCard icon="🛍️" title="Magazin" subtitle="Coinlarga xarid qiling" onClick={() => { navigate('/shop'); }} bgClass="bg-gradient-to-br from-quest-yellow/10 to-quest-orange/10" />
+            <NavCard icon="🔁" title="Takrorlash" subtitle={reviewDue > 0 ? `${reviewDue} ta savol kutmoqda` : 'Bugun navbat yo‘q'} onClick={() => { navigate('/review'); }} bgClass="bg-gradient-to-br from-quest-green/10 to-quest-teal/10" />
+            <NavCard icon="🧪" title="Diagnostika" subtitle="Boshlang‘ich darajani aniqlash" onClick={() => { navigate('/diagnostic'); }} bgClass="bg-gradient-to-br from-quest-purple/10 to-quest-blue/10" />
+            <NavCard icon="📊" title="O‘qish statistikasi" subtitle="Taraqqiyotni kuzating" onClick={() => { navigate('/parent-stats'); }} bgClass="bg-gradient-to-br from-quest-blue/10 to-quest-green/10" />
             {isAdmin && (
-              <NavCard icon="⚙️" title="Administrator paneli" subtitle="/admin" onClick={() => navigate('/admin')} bgClass="bg-gradient-to-br from-quest-red/10 to-quest-purple/10" />
+              <NavCard icon="⚙️" title="Administrator paneli" subtitle="/admin" onClick={() => { navigate('/admin'); }} bgClass="bg-gradient-to-br from-quest-red/10 to-quest-purple/10" />
             )}
           </motion.div>
 
@@ -151,7 +151,7 @@ const Dashboard = () => {
                     key={topic.id}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => navigate(`/topic/${topic.slug}`)}
+                    onClick={() => { navigate(`/topic/${topic.slug}`); }}
                     className="rounded-2xl bg-card p-5 shadow-md text-left transition-shadow hover:shadow-lg border-2 border-transparent hover:border-primary/20"
                   >
                     <span className="text-4xl block mb-2">{topic.icon}</span>

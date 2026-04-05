@@ -41,7 +41,7 @@ const NumberLineQuestion = ({ options, onAnswer, disabled }: NumberLineQuestionP
           min={min}
           max={max}
           step={step}
-          onValueChange={(vals) => setValue(vals[0] ?? min)}
+          onValueChange={(vals) => { setValue(vals[0] ?? min); }}
           disabled={disabled}
         />
         <p className="mt-4 text-center text-lg font-black text-foreground">{value}</p>
@@ -49,7 +49,7 @@ const NumberLineQuestion = ({ options, onAnswer, disabled }: NumberLineQuestionP
 
       <motion.button
         whileTap={{ scale: 0.97 }}
-        onClick={() => onAnswer(String(value))}
+        onClick={() => { onAnswer(String(value)); }}
         disabled={disabled}
         className="w-full rounded-xl bg-primary py-3.5 font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl disabled:opacity-50"
       >

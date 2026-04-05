@@ -45,7 +45,7 @@ const EquationBuilderQuestion = ({ options, correctAnswer, onAnswer, disabled }:
             <button
               key={idx}
               type="button"
-              onClick={() => value && removeAt(idx)}
+              onClick={() => { value && removeAt(idx); }}
               disabled={!value || disabled}
               className={`h-12 rounded-xl border-2 text-center text-lg font-black transition-colors ${
                 value ? 'border-primary bg-primary/10 text-foreground' : 'border-border text-muted-foreground'
@@ -63,7 +63,7 @@ const EquationBuilderQuestion = ({ options, correctAnswer, onAnswer, disabled }:
             key={`${token}-${i}`}
             type="button"
             whileTap={{ scale: 0.96 }}
-            onClick={() => addToken(token, i)}
+            onClick={() => { addToken(token, i); }}
             disabled={disabled || picked.length >= expectedCount}
             className="rounded-xl border-2 border-border bg-card px-3 py-3 text-base font-bold text-foreground transition-colors hover:border-primary/40 disabled:opacity-50"
           >
@@ -74,7 +74,7 @@ const EquationBuilderQuestion = ({ options, correctAnswer, onAnswer, disabled }:
 
       <motion.button
         whileTap={{ scale: 0.97 }}
-        onClick={() => onAnswer(picked.map(renderToken).join(','))}
+        onClick={() => { onAnswer(picked.map(renderToken).join(',')); }}
         disabled={!canSubmit}
         className="w-full rounded-xl bg-primary py-3.5 font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl disabled:opacity-50"
       >

@@ -93,7 +93,7 @@ const AuthPage = () => {
         <div className="rounded-2xl bg-card p-8 shadow-lg shadow-primary/5">
           <div className="mb-6 flex rounded-xl bg-muted p-1">
             <button
-              onClick={() => setIsLogin(true)}
+              onClick={() => { setIsLogin(true); }}
               className={`flex-1 rounded-lg py-2.5 text-sm font-bold transition-all duration-200 ${
                 isLogin ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'
               }`}
@@ -101,7 +101,7 @@ const AuthPage = () => {
               Kirish
             </button>
             <button
-              onClick={() => setIsLogin(false)}
+              onClick={() => { setIsLogin(false); }}
               className={`flex-1 rounded-lg py-2.5 text-sm font-bold transition-all duration-200 ${
                 !isLogin ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'
               }`}
@@ -117,7 +117,7 @@ const AuthPage = () => {
                 <input
                   type="text"
                   value={username}
-                  onChange={e => setUsername(e.target.value)}
+                  onChange={e => { setUsername(e.target.value); }}
                   placeholder="MatematikaQahramoni42"
                   required={!isLogin}
                   minLength={3}
@@ -132,7 +132,7 @@ const AuthPage = () => {
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={e => { setEmail(e.target.value); }}
                 placeholder="siz@misol.com"
                 required
                 className="w-full rounded-xl border-2 border-border bg-background px-4 py-3 font-semibold text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
@@ -144,7 +144,7 @@ const AuthPage = () => {
               <input
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={e => { setPassword(e.target.value); }}
                 placeholder="••••••••"
                 required
                 minLength={6}

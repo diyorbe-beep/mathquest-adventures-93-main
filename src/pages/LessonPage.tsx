@@ -44,6 +44,9 @@ const LessonPage = () => {
   const startTimeRef = useRef(Date.now());
   const questionStartedAtRef = useRef(Date.now());
 
+  // Check if user has hearts to answer questions
+  const hasHearts = (profile?.hearts ?? 0) > 0;
+
   useEffect(() => {
     if (lessonId) {
       supabase.from('lessons').select('title, xp_reward, topic_id').eq('id', lessonId).single().then(({ data }) => {
@@ -133,6 +136,14 @@ const LessonPage = () => {
 
   const handleAnswer = (answer: string) => {
     if (showResult) return;
+    
+    // Check if user has hearts before allowing answer
+    if (!hasHearts) {
+      setShowResult(true);
+      setIsCorrect(false);
+      return;
+    }
+    
     setSelectedAnswer(answer);
     const dragDropSelect =
       isDragDrop && isDragDropSelectMode(currentQuestion.question_text, currentQuestion.correct_answer, options.length);
@@ -335,31 +346,50 @@ const LessonPage = () => {
                 {toUzbekQuestionText(currentQuestion.question_text)}
               </h2>
 
+              {!hasHearts && (
+                <div className="mb-6 p-4 rounded-2xl bg-destructive/10 border-2 border-destructive/20">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">💔</span>
+                    <div>
+                      <p className="font-bold text-destructive">Yuraklar tugadi!</p>
+                      <p className="text-sm text-muted-foreground">
+                        Yuraklar tiklanishini kutish yoki do‘kondan sotib oling.
+                      </p>
+                      <HeartCountdownHint
+                        hearts={profile?.hearts ?? 0}
+                        heartsLastRegen={profile?.hearts_last_regen ?? ''}
+                        className="text-sm font-semibold text-destructive"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {isDragDrop ? (
                 <DragDropQuestion
                   options={options}
                   correctAnswer={currentQuestion.correct_answer}
                   questionText={currentQuestion.question_text}
                   onAnswer={handleAnswer}
-                  disabled={showResult}
+                  disabled={showResult || !hasHearts}
                 />
               ) : isEquationBuilder ? (
                 <EquationBuilderQuestion
                   options={options}
                   correctAnswer={currentQuestion.correct_answer}
                   onAnswer={handleAnswer}
-                  disabled={showResult}
+                  disabled={showResult || !hasHearts}
                 />
               ) : isTypeAnswer ? (
                 <TypeAnswerQuestion
                   onAnswer={handleAnswer}
-                  disabled={showResult}
+                  disabled={showResult || !hasHearts}
                 />
               ) : isNumberLine ? (
                 <NumberLineQuestion
                   options={options}
                   onAnswer={handleAnswer}
-                  disabled={showResult}
+                  disabled={showResult || !hasHearts}
                 />
               ) : (
                 <div className="space-y-3">
@@ -376,10 +406,10 @@ const LessonPage = () => {
                     return (
                       <motion.button
                         key={option}
-                        whileHover={!showResult ? { scale: 1.01 } : {}}
-                        whileTap={!showResult ? { scale: 0.98 } : {}}
+                        whileHover={!showResult && hasHearts ? { scale: 1.01 } : {}}
+                        whileTap={!showResult && hasHearts ? { scale: 0.98 } : {}}
                         onClick={() => handleAnswer(option)}
-                        disabled={showResult}
+                        disabled={showResult || !hasHearts}
                         className={`w-full rounded-2xl border-2 px-5 py-4 text-left font-bold text-foreground transition-all ${borderClass} ${
                           showResult && option === selectedAnswer && option !== currentQuestion.correct_answer ? 'animate-shake' : ''
                         }`}
@@ -409,9 +439,14 @@ const LessonPage = () => {
             <div className="container mx-auto max-w-lg flex items-center justify-between">
               <div>
                 <p className={`font-extrabold text-lg ${isCorrect ? 'text-primary' : 'text-destructive'}`}>
-                  {isCorrect ? '🎉 To‘g‘ri!' : '❌ Noto‘g‘ri'}
+                  {!hasHearts ? '💔 Yuraklar tugadi!' : isCorrect ? '🎉 To‘g‘ri!' : '❌ Noto‘g‘ri'}
                 </p>
-                {!isCorrect && currentQuestion.explanation && (
+                {!hasHearts && (
+                  <p className="mt-1 text-sm text-muted-foreground font-semibold">
+                    Yuraklar tiklanishini kutish yoki do‘kondan sotib oling.
+                  </p>
+                )}
+                {!isCorrect && hasHearts && currentQuestion.explanation && (
                   <div className="mt-1">
                     {toUzbekExplanation(currentQuestion.explanation)
                       .split(/[.;]\s+/)

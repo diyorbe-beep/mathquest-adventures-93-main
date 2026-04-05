@@ -31,7 +31,7 @@ const ProfilePage = () => {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border">
         <div className="container mx-auto flex items-center gap-4 px-4 py-3">
-          <button onClick={() => navigate('/dashboard')} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
+          <button onClick={() => { navigate('/dashboard'); }} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-xl font-extrabold text-foreground">👤 Mening profilim</h1>
@@ -67,7 +67,7 @@ const ProfilePage = () => {
                 <motion.button
                   key={avatar.id}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => setSelectedAvatar(avatar.id)}
+                  onClick={() => { setSelectedAvatar(avatar.id); }}
                   className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl transition-all ${
                     selectedAvatar === avatar.id
                       ? 'bg-primary/10 border-2 border-primary shadow-md'

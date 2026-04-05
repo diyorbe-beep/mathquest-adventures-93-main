@@ -41,7 +41,7 @@ const Index = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => navigate('/auth')}
+            onClick={() => { navigate('/auth'); }}
             className="w-full rounded-2xl bg-primary py-4 text-lg font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-shadow hover:shadow-xl"
           >
             Sarguzashtni boshlash 🎮
