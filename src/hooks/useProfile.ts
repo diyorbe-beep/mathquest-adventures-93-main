@@ -2,16 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { HEART_REGEN_MS } from '@/lib/heartRegen';
-import type { Database, Tables, TablesInsert } from '@/integrations/supabase/types';
+import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 
 type Profile = Tables<'profiles'>;
 type XpLog = TablesInsert<'xp_logs'>;
 type HeartsLog = TablesInsert<'hearts_logs'>;
-
-// Extended profile type with coins (assuming coins should be added to the table)
-type ProfileWithCoins = Profile & {
-  coins?: number;
-};
+type CoinLog = TablesInsert<'coin_logs'>;
 
 export const useProfile = () => {
   const { user } = useAuth();
@@ -64,30 +60,30 @@ export const useProfile = () => {
       
       // Update profile XP with proper type handling
       const currentXp = profileQuery.data?.xp ?? 0;
-      const currentCoins = (profileQuery.data as ProfileWithCoins)?.coins ?? 0;
+      const currentCoins = profileQuery.data?.coins ?? 0;
       const newXp = currentXp + amount;
       const newLevel = Math.floor(newXp / 100) + 1;
+      const newCoins = currentCoins + amount;
       
       const { error } = await supabase
         .from('profiles')
         .update({ 
           xp: newXp, 
           level: newLevel,
-          // Note: coins field should be added to the database schema
-          ...(typeof (profileQuery.data as ProfileWithCoins)?.coins === 'number' && {
-            coins: currentCoins + amount
-          })
+          coins: newCoins
         })
         .eq('user_id', user.id);
       
       if (error) throw error;
 
-      // Only log coins if the field exists in the database
-      // Note: coin_logs table should be added to the database schema
-      if (typeof (profileQuery.data as ProfileWithCoins)?.coins === 'number') {
-        // TODO: Implement coin logging when coin_logs table is created
-        console.log('Coin logging:', { userId: user.id, amount, source: 'lesson_xp', lessonId: lessonId ?? null });
-      }
+      // Log coin transaction
+      const coinLogData: CoinLog = {
+        user_id: user.id,
+        amount,
+        source: 'lesson_xp',
+        lesson_id: lessonId || null,
+      };
+      await supabase.from('coin_logs').insert(coinLogData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });

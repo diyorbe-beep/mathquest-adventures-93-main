@@ -71,6 +71,17 @@ const LessonPage = () => {
     if (profile) regenerateHearts.mutate();
   }, [profile?.user_id]);
 
+  // Redirect to dashboard when hearts run out
+  useEffect(() => {
+    if (profile && !hasHearts) {
+      const timer = setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000); // Wait 2 seconds before redirecting
+      
+      return () => clearTimeout(timer);
+    }
+  }, [profile, hasHearts, navigate]);
+
   if (!user) return <Navigate to="/auth" replace />;
   if (isLoading) return <div className="flex min-h-screen items-center justify-center text-xl font-bold animate-pulse text-primary">Savollar yuklanmoqda...</div>;
   if (!sessionQuestions?.length) return <div className="flex min-h-screen items-center justify-center text-xl font-bold text-muted-foreground">Savollar topilmadi</div>;
@@ -353,7 +364,7 @@ const LessonPage = () => {
                     <div>
                       <p className="font-bold text-destructive">Yuraklar tugadi!</p>
                       <p className="text-sm text-muted-foreground">
-                        Yuraklar tiklanishini kutish yoki do‘kondan sotib oling.
+                        2 soniyadan so'ng dashboardga o'tiladi...
                       </p>
                       <HeartCountdownHint
                         hearts={profile?.hearts ?? 0}

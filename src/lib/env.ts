@@ -29,3 +29,21 @@ export const env: EnvConfig = {
 
 export const isDevelopment = import.meta.env.DEV;
 export const isProduction = import.meta.env.PROD;
+
+// Validate Supabase URL format
+export const validateSupabaseConfig = () => {
+  try {
+    const url = new URL(env.VITE_SUPABASE_URL);
+    if (!url.hostname.includes('.supabase.co')) {
+      throw new Error('Invalid Supabase URL format');
+    }
+    console.log('Supabase config validated:', { 
+      url: env.VITE_SUPABASE_URL.replace(/key=.*/, 'key=***'),
+      hostname: url.hostname 
+    });
+    return true;
+  } catch (err) {
+    console.error('Supabase config validation failed:', err);
+    return false;
+  }
+};

@@ -12,13 +12,6 @@ const ThemeToggleFab = () => {
     setMounted(true);
   }, []);
 
-  // Light modni o'chirish uchun funksiya
-  const disableLightMode = () => {
-    if (resolvedTheme === 'light') {
-      setTheme('dark');
-    }
-  };
-
   if (!mounted) {
     return (
       <div
@@ -32,31 +25,26 @@ const ThemeToggleFab = () => {
   const isDark = resolvedTheme === 'dark';
   const isLight = resolvedTheme === 'light';
 
+  const toggleTheme = () => {
+    setTheme(isDark ? 'light' : 'dark');
+  };
+
   return (
     <motion.button
       type="button"
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       whileTap={{ scale: 0.94 }}
-      className={`fixed z-[100] flex h-12 w-12 items-center justify-center rounded-full bg-card text-foreground shadow-lg border-2 border-border hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-        isLight ? 'opacity-50 cursor-not-allowed' : ''
-      }`}
+      className="fixed z-[100] flex h-12 w-12 items-center justify-center rounded-full bg-card text-foreground shadow-lg border-2 border-border hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       style={{ bottom: 'max(1rem, env(safe-area-inset-bottom, 0px))', right: 'max(1rem, env(safe-area-inset-right, 0px))' }}
-      onClick={disableLightMode}
-      title={isLight ? 'Light mod o\'chirilgan (faqat ruxsat etilgan)' : isDark ? 'Qorong\'u rejim' : 'Qorong\'u rejim'}
-      aria-label={isLight ? 'Light mod o\'chirilgan' : isDark ? 'Qorong\'u rejim' : 'Qorong\'u rejim'}
-      disabled={isLight}
+      onClick={toggleTheme}
+      title={isDark ? 'Yorqin rejim' : 'Qorong\'u rejim'}
+      aria-label={isDark ? 'Yorqin rejimga o\'tish' : 'Qorong\'u rejimga o\'tish'}
     >
       {isDark ? (
-        <>
-          <Sun className="h-5 w-5 text-quest-yellow" />
-          <span className="ml-1 text-xs font-bold text-quest-orange">🚫</span>
-        </>
+        <Sun className="h-5 w-5 text-quest-yellow" />
       ) : (
-        <>
-          <Moon className="h-5 w-5 text-quest-purple" />
-          <span className="ml-1 text-xs font-bold text-quest-green">✅</span>
-        </>
+        <Moon className="h-5 w-5 text-quest-purple" />
       )}
     </motion.button>
   );

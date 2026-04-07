@@ -4,7 +4,7 @@ const EXACT_TEXT_MAP: Record<string, string> = {
   'What is an obtuse angle?': 'O‘tmas burchak nima?',
   // Addition questions
   'What is 15 + 7?': '15 + 7 nechiga teng?',
-  'What is 12 - 5?': '12 - 5 nechiga teng?',
+  'What is 15 - 7?': '15 - 7 nechiga teng?',
   'What is 8 × 3?': '8 × 3 nechiga teng?',
   'What is 20 ÷ 4?': '20 ÷ 4 nechiga teng?',
   'What is half of 14?': '14 ning yarmi necha?',

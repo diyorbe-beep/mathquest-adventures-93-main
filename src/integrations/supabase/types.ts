@@ -136,9 +136,40 @@ export type Database = {
           },
         ]
       }
+      coin_logs: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          lesson_id: string | null
+          metadata: Json | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          metadata?: Json | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          metadata?: Json | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_id: number
+          coins: number
           created_at: string
           hearts: number
           hearts_last_regen: string
@@ -155,6 +186,7 @@ export type Database = {
         }
         Insert: {
           avatar_id?: number
+          coins?: number
           created_at?: string
           hearts?: number
           hearts_last_regen?: string
@@ -171,6 +203,7 @@ export type Database = {
         }
         Update: {
           avatar_id?: number
+          coins?: number
           created_at?: string
           hearts?: number
           hearts_last_regen?: string
