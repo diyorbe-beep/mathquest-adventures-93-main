@@ -16,11 +16,16 @@ export class QuestionVariationGenerator {
   ): AnswerVariation[] {
     const variations: AnswerVariation[] = [];
     
-    // Always include the correct answer
-    variations.push({
-      text: correctAnswer,
-      isCorrect: true,
-      explanation: this.getExplanation(correctAnswer, questionType)
+    // Generate multiple correct answer variations
+    const correctVariations = this.generateCorrectAnswerVariations(correctAnswer, questionType);
+    
+    // Add all correct variations
+    correctVariations.forEach(variation => {
+      variations.push({
+        text: variation,
+        isCorrect: true,
+        explanation: this.getExplanation(correctAnswer, questionType)
+      });
     });
     
     // Generate distractors based on question type
@@ -37,6 +42,133 @@ export class QuestionVariationGenerator {
     
     // Shuffle and return
     return this.shuffleArray(variations);
+  }
+  
+  // Generate multiple correct answer variations
+  private static generateCorrectAnswerVariations(
+    correctAnswer: string,
+    questionType: string
+  ): string[] {
+    const variations: string[] = [correctAnswer]; // Always include original
+    
+    // Parse correct answer if it's a number
+    const correctNum = parseFloat(correctAnswer);
+    
+    if (!isNaN(correctNum)) {
+      // Mathematical variations that equal the same result
+      if (questionType.includes('addition') || questionType.includes('plus') || questionType.includes('+')) {
+        // For addition: a + b = c, also accept b + a = c
+        if (correctAnswer.includes('+')) {
+          const parts = correctAnswer.split('+').map(p => p.trim());
+          if (parts.length === 2) {
+            variations.push(`${parts[1]} + ${parts[0]}`);
+          }
+        }
+        
+        // Add equivalent expressions
+        variations.push(
+          `${correctNum - 1} + 1`,
+          `${correctNum - 2} + 2`,
+          `${Math.floor(correctNum / 2)} + ${Math.ceil(correctNum / 2)}`
+        );
+      } else if (questionType.includes('subtraction') || questionType.includes('minus') || questionType.includes('-')) {
+        // For subtraction: a - b = c
+        if (correctAnswer.includes('-')) {
+          const parts = correctAnswer.split('-').map(p => p.trim());
+          if (parts.length === 2) {
+            variations.push(`(${parts[0]} + ${parts[1]}) - ${Number(parts[1]) * 2}`);
+          }
+        }
+        
+        // Add equivalent expressions
+        variations.push(
+          `${correctNum + 5} - 5`,
+          `${correctNum + 10} - 10`,
+          `(${correctNum} + 2) - 2`
+        );
+      } else if (questionType.includes('multiplication') || questionType.includes('times') || questionType.includes('×')) {
+        // For multiplication: a × b = c, also accept b × a = c
+        if (correctAnswer.includes('×')) {
+          const parts = correctAnswer.split('×').map(p => p.trim());
+          if (parts.length === 2) {
+            variations.push(`${parts[1]} × ${parts[0]}`);
+          }
+        }
+        
+        // Add equivalent expressions
+        if (correctNum > 1) {
+          const factors = this.findFactors(correctNum);
+          factors.forEach(([a, b]) => {
+            if (`${a} × ${b}` !== correctAnswer) {
+              variations.push(`${a} × ${b}`);
+            }
+          });
+        }
+      } else if (questionType.includes('division') || questionType.includes('divide') || questionType.includes('÷')) {
+        // For division: a ÷ b = c
+        if (correctAnswer.includes('÷')) {
+          const parts = correctAnswer.split('÷').map(p => p.trim());
+          if (parts.length === 2) {
+            variations.push(`${parts[0]} ÷ ${parts[1]}`);
+          }
+        }
+        
+        // Add equivalent expressions
+        variations.push(
+          `${correctNum * 2} ÷ 2`,
+          `${correctNum * 3} ÷ 3`,
+          `(${correctNum} × 4) ÷ 4`
+        );
+      } else {
+        // General mathematical variations
+        variations.push(
+          `${correctNum} + 0`,
+          `${correctNum} - 0`,
+          `${correctNum} × 1`,
+          `${correctNum} ÷ 1`
+        );
+      }
+    } else {
+      // Non-numerical variations - different formats
+      if (correctAnswer.includes('/')) {
+        // Fraction variations
+        const parts = correctAnswer.split('/');
+        if (parts.length === 2) {
+          const num = parseFloat(parts[0]);
+          const den = parseFloat(parts[1]);
+          if (!isNaN(num) && !isNaN(den)) {
+            // Equivalent fractions
+            const multiplier = 2;
+            variations.push(`${num * multiplier}/${den * multiplier}`);
+            
+            if (num % 2 === 0 && den % 2 === 0) {
+              variations.push(`${Number(num/2)}/${Number(den/2)}`);
+            }
+          }
+        }
+      }
+      
+      // Text variations
+      variations.push(
+        correctAnswer.trim(),
+        correctAnswer.toUpperCase(),
+        correctAnswer.toLowerCase()
+      );
+    }
+    
+    // Remove duplicates and return
+    return [...new Set(variations)];
+  }
+  
+  // Find factors of a number
+  private static findFactors(n: number): [number, number][] {
+    const factors: [number, number][] = [];
+    for (let i = 2; i <= Math.sqrt(n); i++) {
+      if (n % i === 0) {
+        factors.push([i, n / i]);
+      }
+    }
+    return factors;
   }
   
   // Generate distractors based on question type and difficulty
