@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { applyQuestionVariations } from '@/lib/questionVariations';
 
 export const useTopics = () => {
   return useQuery({
@@ -40,7 +41,9 @@ export const useQuestions = (lessonId?: string) => {
         .eq('lesson_id', lessonId)
         .order('sort_order');
       if (error) throw error;
-      return data;
+      
+      // Apply variations (permutations, commutative property, etc.)
+      return applyQuestionVariations(data || []);
     },
     enabled: !!lessonId,
   });

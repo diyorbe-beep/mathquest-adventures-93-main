@@ -96,12 +96,6 @@ const TypeAnswerQuestion = ({
         Javobni tekshirish ✨
       </motion.button>
 
-      {/* Show correct variations count for debugging */}
-      {process.env.NODE_ENV === 'development' && correctVariations.length > 1 && (
-        <div className="p-2 rounded bg-gray-100 text-xs">
-          <p>To'g'ri javob variantlari: {correctVariations.length} ta</p>
-        </div>
-      )}
     </div>
   );
 };

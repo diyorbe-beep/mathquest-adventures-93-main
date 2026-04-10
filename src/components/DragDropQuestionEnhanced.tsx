@@ -49,21 +49,14 @@ const DragDropQuestion = ({
   const handleSubmit = () => {
     if (disabled) return;
     
+    // Sort selected items for order-independent comparison if in select mode
     const answer = isSelectMode 
-      ? selectedItems.join(',')
+      ? selectedItems.sort().join(',')
       : items.join(',');
     
-    // Check if answer matches any correct variation
-    const isCorrect = questionVariations.some(variation => 
-      variation.isCorrect && variation.text === answer
-    );
-    
-    if (isCorrect) {
-      onAnswer(answer);
-    } else {
-      setShowHint(true);
-      setTimeout(() => setShowHint(false), 3000);
-    }
+    // Always call onAnswer, don't block.
+    // The parent (LessonPage) will handle heart deduction and feedback.
+    onAnswer(answer);
   };
 
   const hasSelection = isSelectMode ? selectedItems.length > 0 : true;
@@ -139,12 +132,6 @@ const DragDropQuestion = ({
         {isOrderMode ? 'Tartibni tekshirish' : 'Tanlovni tekshirish'} ✨
       </motion.button>
 
-      {/* Show variations count for debugging */}
-      {process.env.NODE_ENV === 'development' && questionVariations.length > 1 && (
-        <div className="p-2 rounded bg-gray-100 text-xs">
-          <p>Javob variantlari: {questionVariations.length} ta</p>
-        </div>
-      )}
     </div>
   );
 };

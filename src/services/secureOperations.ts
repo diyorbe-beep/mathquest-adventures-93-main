@@ -17,81 +17,20 @@ export const supabaseAdmin = createClient<Database>(
 // Secure operations using direct SQL
 export class SecureOperations {
   static async purchaseItem(userId: string, itemId: string, quantity: number = 1) {
-    const { data, error } = await supabaseAdmin
-      .from('profiles' as any)
-      .select('coins')
-      .eq('user_id', userId)
-      .single();
-    
+    // Cast to any to bypass stale type definitions from the client-side
+    const { data, error } = await (supabaseAdmin as any).rpc('process_marketplace_order', {
+      p_items: [{ item_id: itemId, quantity }],
+      p_idempotency_key: `legacy_${userId}_${itemId}_${Date.now()}`
+    });
+
     if (error) {
-      throw new Error(`Failed to get user balance: ${error.message}`);
+      throw new Error(`Xaridda xatolik: ${error.message}`);
     }
-    
-    const currentCoins = data?.coins || 0;
-    
-    // Get item details
-    const { data: itemData, error: itemError } = await supabaseAdmin
-      .from('shop_items' as any)
-      .select('price, name, is_active')
-      .eq('id', itemId)
-      .single();
-    
-    if (itemError || !itemData?.is_active) {
-      throw new Error('Item not found or inactive');
-    }
-    
-    const totalCost = itemData.price * quantity;
-    
-    if (currentCoins < totalCost) {
-      return { success: false, message: 'Insufficient coins', newBalance: currentCoins };
-    }
-    
-    // Perform atomic transaction
-    const { error: updateError } = await supabaseAdmin
-      .from('profiles' as any)
-      .update({ 
-        coins: currentCoins - totalCost,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', userId);
-    
-    if (updateError) {
-      throw new Error(`Failed to update balance: ${updateError.message}`);
-    }
-    
-    // Add to inventory
-    const { error: inventoryError } = await supabaseAdmin
-      .from('user_inventory' as any)
-      .upsert({
-        user_id: userId,
-        item_id: itemId,
-        quantity: quantity
-      }, {
-        onConflict: 'user_id,item_id'
-      });
-    
-    if (inventoryError) {
-      throw new Error(`Failed to update inventory: ${inventoryError.message}`);
-    }
-    
-    // Log transaction
-    await supabaseAdmin
-      .from('coin_logs' as any)
-      .insert({
-        user_id: userId,
-        amount: -totalCost,
-        source: 'shop_purchase',
-        metadata: {
-          item_id: itemId,
-          item_name: itemData.name,
-          quantity: quantity
-        }
-      });
-    
+
     return { 
       success: true, 
-      message: 'Purchase successful', 
-      newBalance: currentCoins - totalCost 
+      message: 'Xarid muvaffaqiyatli', 
+      newBalance: (data as any).new_balance 
     };
   }
   

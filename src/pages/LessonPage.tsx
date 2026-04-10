@@ -40,6 +40,7 @@ const LessonPage = () => {
   const [finished, setFinished] = useState(false);
   const [lessonTitle, setLessonTitle] = useState('');
   const [topicId, setTopicId] = useState<string | null>(null);
+  const [nextLessonId, setNextLessonId] = useState<string | null>(null);
   const [xpReward, setXpReward] = useState(10);
   const startTimeRef = useRef(Date.now());
   const questionStartedAtRef = useRef(Date.now());
@@ -254,6 +255,21 @@ const LessonPage = () => {
 
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
 
+      // Find the next lesson for automatic progression
+      const { data: topicLessons } = await supabase
+        .from('lessons')
+        .select('id, sort_order')
+        .eq('topic_id', topicId)
+        .order('sort_order');
+      
+      if (topicLessons) {
+        const currentIndex = topicLessons.findIndex(l => l.id === lessonId);
+        if (currentIndex !== -1 && currentIndex < topicLessons.length - 1) {
+          const nextId = topicLessons[currentIndex + 1].id;
+          setNextLessonId(nextId);
+        }
+      }
+
       const completedCount = (allProgress?.filter(p => p.completed).length ?? 0) + 1;
       const perfectCount = (allProgress?.filter(p => Number(p.best_accuracy) === 100).length ?? 0) + (correct === sessionQuestions.length ? 1 : 0);
 
@@ -311,10 +327,17 @@ const LessonPage = () => {
           </div>
 
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              if (nextLessonId) {
+                navigate(`/lesson/${nextLessonId}`, { replace: true });
+                window.location.reload(); // Force reload to reset lesson state
+              } else {
+                navigate(-1);
+              }
+            }}
             className="w-full rounded-xl bg-primary py-3.5 font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl active:scale-[0.97]"
           >
-            Davom etish 🚀
+            {nextLessonId ? 'Keyingi dars 🚀' : 'Davom etish 🚀'}
           </button>
         </motion.div>
       </div>

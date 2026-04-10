@@ -4,6 +4,7 @@ import { Suspense, lazy } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CartProvider } from "@/contexts/CartContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ThemeToggleFab from "@/components/ThemeToggleFab";
 import { handleError } from "@/lib/errorHandler";
@@ -23,6 +24,7 @@ const AdminAccess = lazy(() => import("./pages/AdminAccess"));
 const ShopPage = lazy(() => import("./pages/ShopPage"));
 const ReviewPage = lazy(() => import("./pages/ReviewPage"));
 const DiagnosticPage = lazy(() => import("./pages/DiagnosticPage"));
+const OrdersPage = lazy(() => import("./pages/OrdersPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading component
@@ -61,32 +63,35 @@ const App = () => (
   >
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/map" element={<MapPage />} />
-                <Route path="/topic/:slug" element={<TopicMap />} />
-                <Route path="/lesson/:lessonId" element={<LessonPage />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/achievements" element={<AchievementsPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/parent-stats" element={<ParentStats />} />
-                <Route path="/shop" element={<ShopPage />} />
-                <Route path="/review" element={<ReviewPage />} />
-                <Route path="/diagnostic" element={<DiagnosticPage />} />
-                <Route path="/admin-login" element={<Navigate to="/admin" replace />} />
-                <Route path="/admin" element={<AdminAccess />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-          <ThemeToggleFab />
-        </TooltipProvider>
+        <CartProvider>
+          <TooltipProvider>
+            <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/map" element={<MapPage />} />
+                  <Route path="/topic/:slug" element={<TopicMap />} />
+                  <Route path="/lesson/:lessonId" element={<LessonPage />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
+                  <Route path="/achievements" element={<AchievementsPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/parent-stats" element={<ParentStats />} />
+                  <Route path="/shop" element={<ShopPage />} />
+                  <Route path="/orders" element={<OrdersPage />} />
+                  <Route path="/review" element={<ReviewPage />} />
+                  <Route path="/diagnostic" element={<DiagnosticPage />} />
+                  <Route path="/admin-login" element={<Navigate to="/admin" replace />} />
+                  <Route path="/admin" element={<AdminAccess />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+            <ThemeToggleFab />
+          </TooltipProvider>
+        </CartProvider>
       </AuthProvider>
     </QueryClientProvider>
   </ErrorBoundary>

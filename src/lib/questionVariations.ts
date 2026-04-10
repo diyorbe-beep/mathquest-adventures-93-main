@@ -14,26 +14,29 @@ export class QuestionVariationGenerator {
     questionType: string,
     difficulty: number = 1
   ): AnswerVariation[] {
-    const variations: AnswerVariation[] = [];
+    const allVariations: AnswerVariation[] = [];
     
     // Generate multiple correct answer variations
     const correctVariations = this.generateCorrectAnswerVariations(correctAnswer, questionType);
     
-    // Add all correct variations
-    correctVariations.forEach(variation => {
-      variations.push({
-        text: variation,
-        isCorrect: true,
-        explanation: this.getExplanation(correctAnswer, questionType)
-      });
+    // 1. Pick ONE correct variation randomly to be 'THE' correct answer for this MCQ instance
+    const selectedCorrect = this.shuffleArray(correctVariations)[0];
+    
+    allVariations.push({
+      text: selectedCorrect,
+      isCorrect: true,
+      explanation: this.getExplanation(correctAnswer, questionType)
     });
     
-    // Generate distractors based on question type
+    // 2. Generate distractors
     const distractors = this.generateDistractors(correctAnswer, questionType, difficulty);
     
-    // Add distractors
-    distractors.forEach(distractor => {
-      variations.push({
+    // Ensure distractors don't include ANY of the correct variations
+    const filteredDistractors = distractors.filter(d => !correctVariations.includes(d));
+    
+    // 3. Add up to 3 distractors to make it 4 options total
+    filteredDistractors.slice(0, 3).forEach(distractor => {
+      allVariations.push({
         text: distractor,
         isCorrect: false,
         explanation: this.getWrongAnswerExplanation(distractor, correctAnswer)
@@ -41,7 +44,7 @@ export class QuestionVariationGenerator {
     });
     
     // Shuffle and return
-    return this.shuffleArray(variations);
+    return this.shuffleArray(allVariations);
   }
   
   // Generate multiple correct answer variations
@@ -49,122 +52,9 @@ export class QuestionVariationGenerator {
     correctAnswer: string,
     questionType: string
   ): string[] {
-    const variations: string[] = [correctAnswer]; // Always include original
-    
-    // Parse correct answer if it's a number
-    const correctNum = parseFloat(correctAnswer);
-    
-    if (!isNaN(correctNum)) {
-      // Mathematical variations that equal the same result
-      if (questionType.includes('addition') || questionType.includes('plus') || questionType.includes('+')) {
-        // For addition: a + b = c, also accept b + a = c
-        if (correctAnswer.includes('+')) {
-          const parts = correctAnswer.split('+').map(p => p.trim());
-          if (parts.length === 2) {
-            const commutative = `${parts[1]} + ${parts[0]}`;
-            if (commutative !== correctAnswer) {
-              variations.push(commutative);
-            }
-          }
-        }
-        
-        // Add equivalent expressions
-        variations.push(
-          `${correctNum - 1} + 1`,
-          `${correctNum - 2} + 2`,
-          `${Math.floor(correctNum / 2)} + ${Math.ceil(correctNum / 2)}`
-        );
-      } else if (questionType.includes('subtraction') || questionType.includes('minus') || questionType.includes('-')) {
-        // For subtraction: a - b = c
-        if (correctAnswer.includes('-')) {
-          const parts = correctAnswer.split('-').map(p => p.trim());
-          if (parts.length === 2) {
-            variations.push(`(${parts[0]} + ${parts[1]}) - ${Number(parts[1]) * 2}`);
-          }
-        }
-        
-        // Add equivalent expressions
-        variations.push(
-          `${correctNum + 5} - 5`,
-          `${correctNum + 10} - 10`,
-          `(${correctNum} + 2) - 2`
-        );
-      } else if (questionType.includes('multiplication') || questionType.includes('times') || questionType.includes('×')) {
-        // For multiplication: a × b = c, also accept b × a = c
-        if (correctAnswer.includes('×')) {
-          const parts = correctAnswer.split('×').map(p => p.trim());
-          if (parts.length === 2) {
-            const commutative = `${parts[1]} × ${parts[0]}`;
-            if (commutative !== correctAnswer) {
-              variations.push(commutative);
-            }
-          }
-        }
-        
-        // Add equivalent expressions
-        if (correctNum > 1) {
-          const factors = this.findFactors(correctNum);
-          factors.forEach(([a, b]) => {
-            const factorAnswer = `${a} × ${b}`;
-            if (factorAnswer !== correctAnswer) {
-              variations.push(factorAnswer);
-            }
-          });
-        }
-      } else if (questionType.includes('division') || questionType.includes('divide') || questionType.includes('÷')) {
-        // For division: a ÷ b = c
-        if (correctAnswer.includes('÷')) {
-          const parts = correctAnswer.split('÷').map(p => p.trim());
-          if (parts.length === 2) {
-            variations.push(`${parts[0]} ÷ ${parts[1]}`);
-          }
-        }
-        
-        // Add equivalent expressions
-        variations.push(
-          `${correctNum * 2} ÷ 2`,
-          `${correctNum * 3} ÷ 3`,
-          `(${correctNum} × 4) ÷ 4`
-        );
-      } else {
-        // General mathematical variations
-        variations.push(
-          `${correctNum} + 0`,
-          `${correctNum} - 0`,
-          `${correctNum} × 1`,
-          `${correctNum} ÷ 1`
-        );
-      }
-    } else {
-      // Non-numerical variations - different formats
-      if (correctAnswer.includes('/')) {
-        // Fraction variations
-        const parts = correctAnswer.split('/');
-        if (parts.length === 2) {
-          const num = parseFloat(parts[0]);
-          const den = parseFloat(parts[1]);
-          if (!isNaN(num) && !isNaN(den)) {
-            // Equivalent fractions
-            const multiplier = 2;
-            variations.push(`${num * multiplier}/${den * multiplier}`);
-            
-            if (num % 2 === 0 && den % 2 === 0) {
-              variations.push(`${Number(num/2)}/${Number(den/2)}`);
-            }
-          }
-        }
-      }
-      
-      // Text variations
-      variations.push(
-        correctAnswer.trim(),
-        correctAnswer.toUpperCase(),
-        correctAnswer.toLowerCase()
-      );
-    }
-    
-    // Remove duplicates and return
-    return [...new Set(variations)];
+    // Keep it simple: only the original correct answer should be shown as an option
+    // unless it's a very specific case.
+    return [correctAnswer.trim()];
   }
   
   // Find factors of a number
@@ -368,18 +258,24 @@ export class QuestionVariationGenerator {
     questionText: string
   ): AnswerVariation[] {
     const variations: AnswerVariation[] = [];
+    const correctItems = correctAnswer.split(',').map(i => i.trim());
     
-    // Check if it's a selection or ordering question
-    const isSelection = correctAnswer.split(',').length < options.length;
+    // 1. Add ALL permutations of the correct items for selection mode
+    // (since order shouldn't matter for selection)
+    const isSelection = correctItems.length < options.length;
     
     if (isSelection) {
-      // Selection question - generate different combinations
-      const correctItems = correctAnswer.split(',').map(i => i.trim());
-      const allItems = [...options];
-      
-      // Generate variations with one extra item
-      const extraItems = allItems.filter(item => !correctItems.includes(item));
-      
+      const perms = this.getPermutations(correctItems);
+      perms.forEach(p => {
+        variations.push({
+          text: p.join(','),
+          isCorrect: true,
+          explanation: 'To\'g\'ri tanlov!'
+        });
+      });
+
+      // Generate wrong variations (extra items)
+      const extraItems = options.filter(item => !correctItems.includes(item));
       extraItems.forEach(extraItem => {
         const wrongSelection = [...correctItems, extraItem];
         variations.push({
@@ -389,7 +285,7 @@ export class QuestionVariationGenerator {
         });
       });
       
-      // Generate variations with missing item
+      // Generate wrong variations (missing items)
       correctItems.forEach(missingItem => {
         const wrongSelection = correctItems.filter(item => item !== missingItem);
         if (wrongSelection.length > 0) {
@@ -401,23 +297,43 @@ export class QuestionVariationGenerator {
         }
       });
     } else {
-      // Ordering question - generate different orders
-      const correctOrder = correctAnswer.split(',').map(i => i.trim());
-      
-      // Generate variations by swapping adjacent elements
-      for (let i = 0; i < correctOrder.length - 1; i++) {
-        const wrongOrder = [...correctOrder];
+      // Ordering question - add the original correct answer
+      variations.push({
+        text: correctAnswer,
+        isCorrect: true,
+        explanation: 'To\'g\'ri tartib!'
+      });
+
+      // Generate wrong orders by swapping adjacent elements
+      for (let i = 0; i < correctItems.length - 1; i++) {
+        const wrongOrder = [...correctItems];
         [wrongOrder[i], wrongOrder[i + 1]] = [wrongOrder[i + 1], wrongOrder[i]];
         
-        variations.push({
-          text: wrongOrder.join(','),
-          isCorrect: false,
-          explanation: 'Tartib noto\'g\'ri. Elementlarni to\'g\'ri tartibda joylashtiring.'
-        });
+        if (wrongOrder.join(',') !== correctAnswer) {
+          variations.push({
+            text: wrongOrder.join(','),
+            isCorrect: false,
+            explanation: 'Tartib noto\'g\'ri. Elementlarni to\'g\'ri tartibda joylashtiring.'
+          });
+        }
       }
     }
     
     return this.shuffleArray(variations);
+  }
+
+  // Helper to get permutations
+  private static getPermutations<T>(arr: T[]): T[][] {
+    if (arr.length <= 1) return [arr];
+    const result: T[][] = [];
+    for (let i = 0; i < arr.length; i++) {
+      const rest = [...arr.slice(0, i), ...arr.slice(i + 1)];
+      const subPerms = this.getPermutations(rest);
+      for (const p of subPerms) {
+        result.push([arr[i], ...p]);
+      }
+    }
+    return result;
   }
 }
 
@@ -455,10 +371,17 @@ export const applyQuestionVariations = (
     }
     
     // Apply variations to question
-    return {
+    const updatedQuestion = {
       ...question,
       variations,
       hasVariations: variations.length > 1
     };
+
+    // For multiple choice, override the options with the shuffled variations
+    if (questionType === 'multiple_choice' && variations.length > 0) {
+      updatedQuestion.options = variations.map(v => v.text);
+    }
+
+    return updatedQuestion;
   });
 };

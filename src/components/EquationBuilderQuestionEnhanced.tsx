@@ -155,12 +155,6 @@ const EquationBuilderQuestion = ({
         </motion.button>
       </div>
 
-      {/* Show variations count for debugging */}
-      {process.env.NODE_ENV === 'development' && questionVariations.length > 1 && (
-        <div className="p-2 rounded bg-gray-100 text-xs">
-          <p>Tenglama variantlari: {questionVariations.length} ta</p>
-        </div>
-      )}
     </div>
   );
 };
