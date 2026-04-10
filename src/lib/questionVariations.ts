@@ -61,7 +61,10 @@ export class QuestionVariationGenerator {
         if (correctAnswer.includes('+')) {
           const parts = correctAnswer.split('+').map(p => p.trim());
           if (parts.length === 2) {
-            variations.push(`${parts[1]} + ${parts[0]}`);
+            const commutative = `${parts[1]} + ${parts[0]}`;
+            if (commutative !== correctAnswer) {
+              variations.push(commutative);
+            }
           }
         }
         
@@ -91,7 +94,10 @@ export class QuestionVariationGenerator {
         if (correctAnswer.includes('×')) {
           const parts = correctAnswer.split('×').map(p => p.trim());
           if (parts.length === 2) {
-            variations.push(`${parts[1]} × ${parts[0]}`);
+            const commutative = `${parts[1]} × ${parts[0]}`;
+            if (commutative !== correctAnswer) {
+              variations.push(commutative);
+            }
           }
         }
         
@@ -99,8 +105,9 @@ export class QuestionVariationGenerator {
         if (correctNum > 1) {
           const factors = this.findFactors(correctNum);
           factors.forEach(([a, b]) => {
-            if (`${a} × ${b}` !== correctAnswer) {
-              variations.push(`${a} × ${b}`);
+            const factorAnswer = `${a} × ${b}`;
+            if (factorAnswer !== correctAnswer) {
+              variations.push(factorAnswer);
             }
           });
         }
@@ -301,6 +308,13 @@ export class QuestionVariationGenerator {
   ): AnswerVariation[] {
     const variations: AnswerVariation[] = [];
     
+    // Always include the original correct answer
+    variations.push({
+      text: correctAnswer,
+      isCorrect: true,
+      explanation: 'Asl tenglama to\'g\'ri'
+    });
+    
     // Parse the equation
     const parts = correctAnswer.split(',').map(p => p.trim());
     
@@ -311,11 +325,14 @@ export class QuestionVariationGenerator {
       if (!isNaN(num1) && !isNaN(num2)) {
         // Generate variations with commutative property if applicable
         if (questionText.includes('+') || questionText.includes('×')) {
-          variations.push({
-            text: `${num2},${num1}`,
-            isCorrect: true,
-            explanation: 'Almashtirish xossasi: a + b = b + a'
-          });
+          const commutativeAnswer = `${num2},${num1}`;
+          if (commutativeAnswer !== correctAnswer) {
+            variations.push({
+              text: commutativeAnswer,
+              isCorrect: true,
+              explanation: 'Almashtirish xossasi: a + b = b + a'
+            });
+          }
         }
         
         // Generate close variations
@@ -328,11 +345,14 @@ export class QuestionVariationGenerator {
         
         variations_num.forEach(([v1, v2]) => {
           if (v1 > 0 && v2 > 0) {
-            variations.push({
-              text: `${v1},${v2}`,
-              isCorrect: false,
-              explanation: 'Bu tenglikni to\'g\'ri qilmaydi. Qayta hisoblang.'
-            });
+            const wrongAnswer = `${v1},${v2}`;
+            if (wrongAnswer !== correctAnswer) {
+              variations.push({
+                text: wrongAnswer,
+                isCorrect: false,
+                explanation: 'Bu tenglikni to\'g\'ri qilmaydi. Qayta hisoblang.'
+              });
+            }
           }
         });
       }

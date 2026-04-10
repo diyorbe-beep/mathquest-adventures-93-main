@@ -50,9 +50,17 @@ const EquationBuilderQuestion = ({
     const answer = selectedItems.join(',');
     
     // Check if answer matches any correct variation
-    const isCorrect = questionVariations.some(variation => 
-      variation.isCorrect && variation.text === answer
-    );
+    let isCorrect = false;
+    if (questionVariations.length > 0) {
+      // Use variations if available
+      const correctVariations = questionVariations
+        .filter(v => v.isCorrect)
+        .map(v => v.text);
+      
+      isCorrect = correctVariations.some(variation => 
+        variation === answer
+      );
+    }
     
     if (isCorrect) {
       onAnswer(answer);
