@@ -158,10 +158,31 @@ const LessonPage = () => {
     setSelectedAnswer(answer);
     const dragDropSelect =
       isDragDrop && isDragDropSelectMode(currentQuestion.question_text, currentQuestion.correct_answer, options.length);
-    const correct_ =
-      isEquationBuilder || dragDropSelect
+    
+    // Check if answer matches any correct variation
+    let correct_ = false;
+    if (currentQuestion.variations && currentQuestion.variations.length > 0) {
+      // Use variations if available
+      const correctVariations = currentQuestion.variations
+        .filter(v => v.isCorrect)
+        .map(v => v.text);
+      
+      if (isEquationBuilder || dragDropSelect) {
+        correct_ = correctVariations.some(variation => 
+          isCommutativeEquationMatch(answer, variation, currentQuestion.question_text)
+        );
+      } else {
+        correct_ = correctVariations.some(variation => 
+          normalizeAnswer(answer) === normalizeAnswer(variation)
+        );
+      }
+    } else {
+      // Fallback to original logic
+      correct_ = isEquationBuilder || dragDropSelect
         ? isCommutativeEquationMatch(answer, currentQuestion.correct_answer, currentQuestion.question_text)
         : normalizeAnswer(answer) === normalizeAnswer(currentQuestion.correct_answer);
+    }
+    
     const timeSpentSeconds = Math.max(1, Math.round((Date.now() - questionStartedAtRef.current) / 1000));
     setIsCorrect(correct_);
     setShowResult(true);
@@ -412,8 +433,22 @@ const LessonPage = () => {
                 <div className="space-y-3">
                   {options.map((option, i) => {
                     let borderClass = 'border-border hover:border-primary/40';
+                    
+                    // Check if this option is correct based on variations
+                    let isOptionCorrect = false;
+                    if (showResult && currentQuestion.variations && currentQuestion.variations.length > 0) {
+                      const correctVariations = currentQuestion.variations
+                        .filter(v => v.isCorrect)
+                        .map(v => v.text);
+                      isOptionCorrect = correctVariations.some(variation => 
+                        normalizeAnswer(option) === normalizeAnswer(variation)
+                      );
+                    } else if (showResult) {
+                      isOptionCorrect = normalizeAnswer(option) === normalizeAnswer(currentQuestion.correct_answer);
+                    }
+                    
                     if (showResult) {
-                      if (option === currentQuestion.correct_answer) borderClass = 'border-primary bg-primary/10';
+                      if (isOptionCorrect) borderClass = 'border-primary bg-primary/10';
                       else if (option === selectedAnswer) borderClass = 'border-destructive bg-destructive/10';
                       else borderClass = 'border-border opacity-50';
                     } else if (selectedAnswer === option) {
@@ -428,7 +463,7 @@ const LessonPage = () => {
                         onClick={() => handleAnswer(option)}
                         disabled={showResult || !hasHearts}
                         className={`w-full rounded-2xl border-2 px-5 py-4 text-left font-bold text-foreground transition-all ${borderClass} ${
-                          showResult && option === selectedAnswer && option !== currentQuestion.correct_answer ? 'animate-shake' : ''
+                          showResult && option === selectedAnswer && !isOptionCorrect ? 'animate-shake' : ''
                         }`}
                       >
                         <span className="mr-3 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-sm font-black text-muted-foreground">
