@@ -9,12 +9,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { supabase } from '@/integrations/supabase/client';
-import DragDropQuestion from '@/components/DragDropQuestion';
+import DragDropQuestionEnhanced from '@/components/DragDropQuestionEnhanced';
 import HeartCountdownHint from '@/components/HeartCountdownHint';
-import EquationBuilderQuestion from '@/components/EquationBuilderQuestion';
-import TypeAnswerQuestion from '@/components/TypeAnswerQuestion';
+import EquationBuilderQuestionEnhanced from '@/components/EquationBuilderQuestionEnhanced';
+import TypeAnswerQuestionEnhanced from '@/components/TypeAnswerQuestionEnhanced';
 import NumberLineQuestion from '@/components/NumberLineQuestion';
-import { toUzbekExplanation, toUzbekOption, toUzbekQuestionText } from '@/lib/questionI18n';
+import { toUzbekExplanation, toUzbekOption, toUzbekQuestionText } from '@/lib/questionI18nEnhanced';
 import { toUzbekLessonTitle } from '@/lib/lessonI18n';
 import { isDragDropSelectMode } from '@/lib/dragDropSelectMode';
 import { useLogQuestionAttempt } from '@/hooks/useLearningEngine';
@@ -377,24 +377,30 @@ const LessonPage = () => {
               )}
 
               {isDragDrop ? (
-                <DragDropQuestion
+                <DragDropQuestionEnhanced
                   options={options}
                   correctAnswer={currentQuestion.correct_answer}
                   questionText={currentQuestion.question_text}
                   onAnswer={handleAnswer}
                   disabled={showResult || !hasHearts}
+                  variations={currentQuestion.variations}
                 />
               ) : isEquationBuilder ? (
-                <EquationBuilderQuestion
+                <EquationBuilderQuestionEnhanced
                   options={options}
                   correctAnswer={currentQuestion.correct_answer}
+                  questionText={currentQuestion.question_text}
                   onAnswer={handleAnswer}
                   disabled={showResult || !hasHearts}
+                  variations={currentQuestion.variations}
                 />
               ) : isTypeAnswer ? (
-                <TypeAnswerQuestion
+                <TypeAnswerQuestionEnhanced
                   onAnswer={handleAnswer}
                   disabled={showResult || !hasHearts}
+                  variations={currentQuestion.variations}
+                  questionText={currentQuestion.question_text}
+                  correctAnswer={currentQuestion.correct_answer}
                 />
               ) : isNumberLine ? (
                 <NumberLineQuestion
