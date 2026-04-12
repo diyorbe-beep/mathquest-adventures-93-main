@@ -24,7 +24,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         setItems(JSON.parse(savedCart));
       } catch (e) {
-        console.error('Failed to parse cart', e);
+        if (import.meta.env.DEV) console.error('Savatni o\'qishda xatolik', e);
       }
     }
   }, []);
@@ -86,7 +86,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useCart = () => {
   const context = useContext(CartContext);
   if (context === undefined) {
-    throw new Error('useCart must be used within a CartProvider');
+    throw new Error('useCart faqat CartProvider ichida ishlatilishi kerak');
   }
   return context;
 };

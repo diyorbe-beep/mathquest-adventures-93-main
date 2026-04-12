@@ -33,7 +33,7 @@ const ShopPage = () => {
 
   const handlePurchase = async (itemId: string, price: number) => {
     if (!canAfford(price)) {
-      toast.error('Yetarli coinlar yetarli!');
+      toast.error('Coinlar yetarli emas!');
       return;
     }
 

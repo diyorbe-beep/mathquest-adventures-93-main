@@ -11,8 +11,8 @@ export interface CartItem {
 
 export class MarketplaceService {
   /**
-   * Processes a marketplace order with multiple items
-   * Handles atomicity, stock, and idempotency on the server
+   * Bir nechta mahsulotli bozor buyurtmasini qayta ishlaydi.
+   * Server tomonida atomiklik, zaxira va idempotentlikni boshqaradi.
    */
   static async checkout(items: CartItem[], idempotencyKey?: string) {
     const formattedItems = items.map(item => ({
@@ -27,16 +27,12 @@ export class MarketplaceService {
       });
 
       if (error) {
-        console.error('Checkout error:', error);
+        if (import.meta.env.DEV) console.error('Xarid xatosi:', error);
         throw new Error(error.message || 'Xaridni amalga oshirib bo\'lmadi');
       }
 
-      return data as {
-        success: boolean;
-        order_id: string;
-        total_amount: number;
-        new_balance: number;
-      };
+      const res = Array.isArray(data) ? data[0] : data;
+      return res;
     } catch (err: any) {
       toast.error(err.message || 'Xatolik yuz berdi');
       throw err;
@@ -44,12 +40,12 @@ export class MarketplaceService {
   }
 
   /**
-   * Fetches shop items with vendor details
+   * Do'kon mahsulotlarini sotuvchi ma'lumotlari bilan oladi
    */
   static async getShopItems() {
     const { data, error } = await supabase
       .from('shop_items')
-      .select('*, vendors(business_name, is_verified)')
+      .select('*')
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
@@ -58,7 +54,7 @@ export class MarketplaceService {
   }
 
   /**
-   * Fetches user orders
+   * Foydalanuvchi buyurtmalarini oladi
    */
   static async getUserOrders() {
     const { data, error } = await supabase

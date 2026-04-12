@@ -5,7 +5,25 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    // Log 404 errors in development only
+    if (import.meta.env.DEV) {
+      console.error("404 Xato: Foydalanuvchi mavjud bo\'lmagan yo\'lni ochishga harakat qildi:", location.pathname);
+    } else {
+      // In production, send to error tracking
+      // TODO: Implement proper error tracking service
+      fetch('/api/errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: '404_error',
+          path: location.pathname,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent
+        })
+      }).catch(() => {
+        // Silent fail - don't throw in error handler
+      });
+    }
   }, [location.pathname]);
 
   return (

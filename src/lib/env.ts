@@ -9,8 +9,8 @@ const getRequiredEnv = (key: keyof EnvConfig): string => {
   const value = import.meta.env[key];
   if (!value?.trim()) {
     throw new Error(
-      `Missing required environment variable: ${key}. ` +
-      `Please check your .env file or deployment configuration.`
+      `Talab qilinadigan muhit o\'zgaruvchisi topilmadi: ${key}. ` +
+      `.env faylingizni yoki deployment konfiguratsiyangizni tekshiring.`
     );
   }
   return value;
@@ -35,15 +35,28 @@ export const validateSupabaseConfig = () => {
   try {
     const url = new URL(env.VITE_SUPABASE_URL);
     if (!url.hostname.includes('.supabase.co')) {
-      throw new Error('Invalid Supabase URL format');
+      throw new Error('Noto\'g\'ri Supabase URL formati');
     }
-    console.log('Supabase config validated:', { 
-      url: env.VITE_SUPABASE_URL.replace(/key=.*/, 'key=***'),
-      hostname: url.hostname 
-    });
+    
+    // Log only in development
+    if (import.meta.env.DEV) {
+      console.log('Supabase config validated:', { 
+        url: env.VITE_SUPABASE_URL.replace(/key=.*/, 'key=***'),
+        hostname: url.hostname 
+      });
+    }
+    
     return true;
   } catch (err) {
-    console.error('Supabase config validation failed:', err);
+    // Use proper error handling
+    if (import.meta.env.DEV) {
+      console.error('Supabase config validation failed:', err);
+    }
+    // In production, send to error tracking
+    if (import.meta.env.PROD) {
+      // TODO: Send to error tracking service
+      console.error('Critical: Supabase config validation failed');
+    }
     return false;
   }
 };

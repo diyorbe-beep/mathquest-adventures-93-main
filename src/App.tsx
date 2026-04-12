@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,6 +26,12 @@ const ReviewPage = lazy(() => import("./pages/ReviewPage"));
 const DiagnosticPage = lazy(() => import("./pages/DiagnosticPage"));
 const OrdersPage = lazy(() => import("./pages/OrdersPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Wrapper that forces LessonPage to remount when lessonId changes (avoids window.location.reload)
+const LessonPageKeyed = () => {
+  const { lessonId } = useParams<{ lessonId: string }>();
+  return <LessonPage key={lessonId} />;
+};
 
 // Loading component
 const PageLoader = () => (
@@ -74,7 +80,7 @@ const App = () => (
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/map" element={<MapPage />} />
                   <Route path="/topic/:slug" element={<TopicMap />} />
-                  <Route path="/lesson/:lessonId" element={<LessonPage />} />
+                  <Route path="/lesson/:lessonId" element={<LessonPageKeyed />} />
                   <Route path="/leaderboard" element={<Leaderboard />} />
                   <Route path="/achievements" element={<AchievementsPage />} />
                   <Route path="/profile" element={<ProfilePage />} />

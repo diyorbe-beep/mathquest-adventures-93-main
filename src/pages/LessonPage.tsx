@@ -22,7 +22,7 @@ import { useLogQuestionAttempt } from '@/hooks/useLearningEngine';
 const LessonPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const { user } = useAuth();
-  const { profile, addXp, loseHeart, regenerateHearts } = useProfile();
+  const { profile, addXp, addCoins, loseHeart, regenerateHearts } = useProfile();
   const { data: questions, isLoading } = useQuestions(lessonId);
   const logAttempt = useLogQuestionAttempt();
   const saveProgress = useSaveProgress();
@@ -38,6 +38,7 @@ const LessonPage = () => {
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [isContinuing, setIsContinuing] = useState(false);
   const [lessonTitle, setLessonTitle] = useState('');
   const [topicId, setTopicId] = useState<string | null>(null);
   const [nextLessonId, setNextLessonId] = useState<string | null>(null);
@@ -68,9 +69,14 @@ const LessonPage = () => {
     }
   }, [questions]);
 
+  // Regenerate hearts once on mount (not on every profile refetch)
+  const hasRegenRef = useRef(false);
   useEffect(() => {
-    if (profile) regenerateHearts.mutate();
-  }, [profile?.user_id]);
+    if (profile && !hasRegenRef.current) {
+      hasRegenRef.current = true;
+      regenerateHearts.mutate();
+    }
+  }, [profile?.user_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Redirect to dashboard when hearts run out
   useEffect(() => {
@@ -211,6 +217,9 @@ const LessonPage = () => {
   };
 
   const handleContinue = async () => {
+    if (isContinuing) return;
+    setIsContinuing(true);
+    try {
     if (currentIndex < sessionQuestions.length - 1) {
       // Adaptive ordering: after correct, move a harder question earlier; after wrong, easier one earlier.
       setSessionQuestions((prev) => {
@@ -250,12 +259,29 @@ const LessonPage = () => {
       });
 
       if (earnedXp > 0) {
-        await addXp.mutateAsync({ amount: earnedXp, source: 'dars', lessonId });
+        if (import.meta.env.DEV) {
+          console.log('XP berish jarayoni:', { earnedXp, lessonId, userId: user?.id });
+        }
+        
+        try {
+          await addXp.mutateAsync({ amount: earnedXp, source: 'dars', lessonId });
+        } catch (xpError) {
+          if (import.meta.env.DEV) console.error('XP berishda xatolik:', xpError);
+        }
+        
+        const earnedCoins = Math.ceil(earnedXp / 10);
+        if (earnedCoins > 0) {
+          try {
+            await addCoins.mutateAsync({ amount: earnedCoins, source: 'dars', lessonId });
+          } catch (coinError) {
+            if (import.meta.env.DEV) console.error('Coin berishda xatolik:', coinError);
+          }
+        }
       }
 
       confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
 
-      // Find the next lesson for automatic progression
+      // Find the next lesson — use a local variable to avoid shadowing currentIndex state
       const { data: topicLessons } = await supabase
         .from('lessons')
         .select('id, sort_order')
@@ -263,10 +289,9 @@ const LessonPage = () => {
         .order('sort_order');
       
       if (topicLessons) {
-        const currentIndex = topicLessons.findIndex(l => l.id === lessonId);
-        if (currentIndex !== -1 && currentIndex < topicLessons.length - 1) {
-          const nextId = topicLessons[currentIndex + 1].id;
-          setNextLessonId(nextId);
+        const lessonIndex = topicLessons.findIndex(l => l.id === lessonId);
+        if (lessonIndex !== -1 && lessonIndex < topicLessons.length - 1) {
+          setNextLessonId(topicLessons[lessonIndex + 1].id);
         }
       }
 
@@ -279,6 +304,9 @@ const LessonPage = () => {
         streakDays: profile?.streak_days ?? 0,
         perfectLessons: perfectCount,
       });
+    }
+    } finally {
+      setIsContinuing(false);
     }
   };
 
@@ -329,8 +357,8 @@ const LessonPage = () => {
           <button
             onClick={() => {
               if (nextLessonId) {
+                // Navigate without reload — the key prop on the route will reset state
                 navigate(`/lesson/${nextLessonId}`, { replace: true });
-                window.location.reload(); // Force reload to reset lesson state
               } else {
                 navigate(-1);
               }
@@ -537,11 +565,12 @@ const LessonPage = () => {
               </div>
               <button
                 onClick={handleContinue}
-                className={`rounded-xl px-6 py-3 font-bold text-primary-foreground shadow-lg transition-all active:scale-[0.97] ${
+                disabled={isContinuing}
+                className={`rounded-xl px-6 py-3 font-bold text-primary-foreground shadow-lg transition-all active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed ${
                   isCorrect ? 'bg-primary' : 'bg-destructive'
                 }`}
               >
-                Davom etish
+                {isContinuing ? '...' : 'Davom etish'}
               </button>
             </div>
           </motion.div>

@@ -20,9 +20,11 @@ interface ErrorReport {
 class ErrorHandler {
   private static instance: ErrorHandler;
   private errorQueue: ErrorReport[] = [];
-  private isOnline = navigator.onLine;
+  private isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
 
   private constructor() {
+    if (typeof window === 'undefined') return;
+
     // Handle online/offline events
     window.addEventListener('online', () => {
       this.isOnline = true;
@@ -36,7 +38,7 @@ class ErrorHandler {
     // Handle unhandled promise rejections
     window.addEventListener('unhandledrejection', (event) => {
       this.handleError(event.reason, {
-        component: 'UnhandledPromiseRejection',
+        component: 'BoshqarilmayotganVa\'daQaytarilishi',
         action: 'unhandledrejection'
       });
     });
@@ -44,7 +46,7 @@ class ErrorHandler {
     // Handle global errors
     window.addEventListener('error', (event) => {
       this.handleError(event.error || new Error(event.message), {
-        component: 'GlobalError',
+        component: 'GlobalXato',
         action: 'error'
       });
     });
@@ -65,8 +67,8 @@ class ErrorHandler {
       action: context?.action,
       userId: context?.userId,
       timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
       additionalInfo: context?.additionalInfo,
     };
   }
@@ -78,7 +80,7 @@ class ErrorHandler {
     }
 
     try {
-      // In production, send to your error tracking service
+      // In production, send to error tracking
       if (import.meta.env.PROD) {
         // TODO: Replace with your error tracking service (Sentry, LogRocket, etc.)
         // await fetch('/api/errors', {
@@ -88,16 +90,16 @@ class ErrorHandler {
         // });
         
         // For now, just log to console in production
-        console.error('Production Error:', report);
+        console.error('Ishlab chiqarish xatosi:', report);
       } else {
         // In development, log detailed error
-        console.group('🚨 Error Caught');
-        console.error('Error:', report);
+        console.group('\ud83d\udea8 Xato ushladi');
+        console.error('Xato:', report);
         console.trace('Stack trace');
         console.groupEnd();
       }
     } catch (sendError) {
-      console.error('Failed to send error report:', sendError);
+      console.error('Xato hisobotini yuborish muvaffaqatsiz bo\'ldi:', sendError);
       this.errorQueue.push(report);
     }
   }

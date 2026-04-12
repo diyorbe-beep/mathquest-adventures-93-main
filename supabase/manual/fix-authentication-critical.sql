@@ -60,7 +60,7 @@ EXCEPTION
     RAISE EXCEPTION 'Bunday foydalanuvchi nomi allaqachon mavjud'
       USING ERRCODE = '23505';
   WHEN OTHERS THEN
-    RAISE EXCEPTION 'Profile creation failed: %', SQLERRM
+    RAISE EXCEPTION 'Profil yaratishda xatolik: %', SQLERRM
       USING ERRCODE = '50001';
 END;
 $$;
@@ -105,13 +105,13 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_username_lower_unique
   ON public.profiles (lower(username));
 
 -- 7. Verify tables exist (run this to check)
-SELECT 'profiles table exists' as status FROM information_schema.tables 
+SELECT 'profiles jadvali mavjud' as holat FROM information_schema.tables 
 WHERE table_schema = 'public' AND table_name = 'profiles'
 UNION ALL
-SELECT 'user_roles table exists' as status FROM information_schema.tables 
+SELECT 'user_roles jadvali mavjud' as holat FROM information_schema.tables 
 WHERE table_schema = 'public' AND table_name = 'user_roles'
 UNION ALL
-SELECT 'Triggers created successfully' as status;
+SELECT 'Triggerlar muvaffaqiyatli yaratildi' as holat;
 
 -- =====================================================
 -- AFTER RUNNING THIS SCRIPT:

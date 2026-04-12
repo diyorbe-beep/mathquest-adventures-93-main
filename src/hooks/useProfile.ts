@@ -1,13 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { HEART_REGEN_MS } from '@/lib/heartRegen';
-import type { Tables, TablesInsert } from '@/integrations/supabase/types';
+import type { Tables } from '@/integrations/supabase/types';
 
 type Profile = Tables<'profiles'>;
-type XpLog = TablesInsert<'xp_logs'>;
-type HeartsLog = TablesInsert<'hearts_logs'>;
-type CoinLog = TablesInsert<'coin_logs'>;
 
 export const useProfile = () => {
   const { user } = useAuth();
@@ -46,36 +42,105 @@ export const useProfile = () => {
   });
 
   const addXp = useMutation({
-    mutationFn: async ({ amount, source, lessonId }: { amount: number; source: string; lessonId?: string }) => {
+    mutationFn: async ({ amount, source = 'dars', lessonId }: { amount: number; source?: string; lessonId?: string }) => {
       if (!user) throw new Error('Tasdiqlanmagan');
-      
-      const { data, error } = await (supabase as any).rpc('award_xp', {
-        p_user_id: user.id,
-        p_lesson_id: lessonId,
-        p_amount: amount,
-        p_source: source
+
+      // Kunlik XP chegarasini tekshirish
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayLogs } = await supabase
+        .from('xp_logs')
+        .select('amount')
+        .eq('user_id', user.id)
+        .gte('created_at', today);
+
+      const totalToday = todayLogs?.reduce((s, l) => s + l.amount, 0) ?? 0;
+      if (totalToday + amount > 1000) {
+        throw new Error('Kunlik XP chegarasi oshib ketdi');
+      }
+
+      // Profil yangilash
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('xp, level')
+        .eq('user_id', user.id)
+        .single();
+
+      const currentXp = profile?.xp ?? 0;
+      const newXp = currentXp + amount;
+      const newLevel = Math.floor(newXp / 100) + 1;
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ xp: newXp, level: newLevel, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      // XP log yozish
+      await supabase.from('xp_logs').insert({
+        user_id: user.id,
+        amount,
+        source,
+        lesson_id: lessonId || null,
       });
-      
-      if (error) throw error;
-      
-      const res = Array.isArray(data) ? data[0] : data;
-      if (res && !res.success) throw new Error(res.message);
-      
-      return res;
+
+      return { success: true, newXp, newLevel };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
-      queryClient.invalidateQueries({ queryKey: ['coin_logs'] });
       queryClient.invalidateQueries({ queryKey: ['xp_logs'] });
+    },
+    onError: (error) => {
+      if (import.meta.env.DEV) console.error('XP berishda xatolik:', error);
+    },
+  });
+
+  const addCoins = useMutation({
+    mutationFn: async ({ amount, source = 'dars', lessonId }: { amount: number; source?: string; lessonId?: string }) => {
+      if (!user) throw new Error('Tasdiqlanmagan');
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('coins')
+        .eq('user_id', user.id)
+        .single();
+
+      const currentCoins = (profile as any)?.coins ?? 0;
+      const newCoins = currentCoins + amount;
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ coins: newCoins, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Coin log yozish
+      await supabase.from('coin_logs' as any).insert({
+        user_id: user.id,
+        amount,
+        source,
+        metadata: lessonId ? { lesson_id: lessonId } : {},
+      });
+
+      return { success: true, newCoins };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['coin_logs'] });
+    },
+    onError: (error) => {
+      if (import.meta.env.DEV) console.error('Coin berishda xatolik:', error);
     },
   });
 
   const loseHeart = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Tasdiqlanmagan');
-      const { data, error } = await (supabase as any).rpc('spend_heart', {
-        p_user_id: user.id
+      const { data, error } = await supabase.rpc('spend_heart', {
+        p_user_id: user.id,
+        p_reason: 'dars'
       });
       if (error) throw error;
       return data;
@@ -89,9 +154,8 @@ export const useProfile = () => {
   const regenerateHearts = useMutation({
     mutationFn: async () => {
       if (!user) return;
-      const { error } = await (supabase as any).rpc('regen_hearts_secure', {
-        p_user_id: user.id,
-        p_regen_ms: HEART_REGEN_MS
+      const { error } = await supabase.rpc('regen_hearts_secure', {
+        p_user_id: user.id
       });
       if (error) throw error;
     },
@@ -103,7 +167,7 @@ export const useProfile = () => {
   const updateStreak = useMutation({
     mutationFn: async () => {
       if (!user) return;
-      const { error } = await (supabase as any).rpc('update_streak_secure', {
+      const { error } = await supabase.rpc('update_streak_secure', {
         p_user_id: user.id
       });
       if (error) throw error;
@@ -118,6 +182,7 @@ export const useProfile = () => {
     loading: profileQuery.isLoading,
     updateProfile,
     addXp,
+    addCoins,
     loseHeart,
     regenerateHearts,
     updateStreak,

@@ -57,7 +57,7 @@ export const useShop = () => {
   // Purchase mutation
   const purchaseMutation = useMutation({
     mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error('Foydalanuvchi tasdiqlanmagan');
       
       return await SecureOperations.purchaseItem(user.id, itemId, quantity);
     },

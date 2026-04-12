@@ -63,8 +63,19 @@ const EXACT_TEXT_MAP: Record<string, string> = {
   'What number is halfway between 2 and 8?': '2 va 8 o\'rtasidagi qaysi son?',
   'Which number is closer to 5: 4 or 6?': '5 ga qaysi son yaqinroq: 4 yoki 6?',
   
-  // Store problems
+  // Store/word problems
   'A store had 25 apples. 7 were sold. How many are left?': 'Do\'konda 25 ta olma bor edi. 7 tasi sotildi. Nechta qoldi?',
+  'A store had 30 apples. 12 were sold. How many are left?': 'Do\'konda 30 ta olma bor edi. 12 tasi sotildi. Nechta qoldi?',
+  'A store had 18 apples. 9 were sold. How many are left?': 'Do\'konda 18 ta olma bor edi. 9 tasi sotildi. Nechta qoldi?',
+  'Ali had 12 candies. He gave 5 to his friend. How many are left?': 'Alida 12 ta konfet bor edi. U 5 tasini do\'stiga berdi. Nechta qoldi?',
+  'There are 20 students. 8 are absent. How many are present?': 'Sinfda 20 ta o\'quvchi bor. 8 tasi yo\'q. Nechta o\'quvchi bor?',
+  'Sara has 15 stickers. She gives 6 to her friend. How many does she have left?': 'Sarada 15 ta stiker bor. U 6 tasini do\'stiga berdi. Nechta qoldi?',
+  'There are 24 birds on a tree. 9 fly away. How many are left?': 'Daraxtda 24 ta qush bor edi. 9 tasi uchib ketdi. Nechta qoldi?',
+  'A basket has 16 oranges. 7 are eaten. How many remain?': 'Savatchada 16 ta apelsin bor. 7 tasi yeyildi. Nechta qoldi?',
+  'Tom has 13 marbles. He loses 4. How many does he have?': 'Tomdа 13 ta shisha bor. U 4 tasini yo\'qotdi. Nechta qoldi?',
+  'There are 11 cookies. 3 are eaten. How many are left?': '11 ta pechene bor edi. 3 tasi yeyildi. Nechta qoldi?',
+  'A box has 20 pencils. 8 are used. How many are left?': 'Qutida 20 ta qalam bor. 8 tasi ishlatildi. Nechta qoldi?',
+  'There are 14 fish in a pond. 5 swim away. How many remain?': 'Hovuzda 14 ta baliq bor edi. 5 tasi suzib ketdi. Nechta qoldi?',
   
   // Fraction comparisons
   'Match: Which fractions equal 1/2? Drag correct ones.': 'Moslashtiring: qaysi kasrlar 1/2 ga teng? To\'g\'rilarni surib tanlang.',
@@ -185,6 +196,92 @@ export const toUzbekQuestionText = (text: string): string => {
   match = raw.match(/^A store had (\d+) (.+)\. (\d+) were sold\. How many are left\?$/i);
   if (match) return `Do'konda ${match[1]} ta ${match[2]} bor edi. ${match[3]} tasi sotildi. Nechta qoldi?`;
 
+  // ── QOʻSHISH masalalari ──────────────────────────────────────────────────
+
+  // "Mia has 23 stickers. She gets 18 more. How many stickers does she have now?"
+  match = raw.match(/^(\w+) has (\d+) (.+)\. (?:He|She|They) (?:gets?|receives?|buys?|finds?|earns?|collects?) (\d+) more\. How many (.+) does (?:he|she|they) have now\?$/i);
+  if (match) return `${match[1]}da ${match[2]} ta ${match[3]} bor. U yana ${match[4]} ta oldi. Endi nechta ${match[3]} bor?`;
+
+  // "Mia has 23 stickers. She gets 18 more. How many does she have now?"
+  match = raw.match(/^(\w+) has (\d+) (.+)\. (?:He|She|They) (?:gets?|receives?|buys?|finds?|earns?|collects?) (\d+) more\. How many does (?:he|she|they) have(?: now)?\?$/i);
+  if (match) return `${match[1]}da ${match[2]} ta ${match[3]} bor. U yana ${match[4]} ta oldi. Endi nechta bor?`;
+
+  // "Tom has 14 apples. He buys 9 more. How many apples does he have in total?"
+  match = raw.match(/^(\w+) has (\d+) (.+)\. (?:He|She|They) (?:gets?|receives?|buys?|finds?|earns?|collects?) (\d+) more\. How many (.+) does (?:he|she|they) have in total\?$/i);
+  if (match) return `${match[1]}da ${match[2]} ta ${match[3]} bor. U yana ${match[4]} ta oldi. Jami nechta ${match[3]} bor?`;
+
+  // "There are 12 boys and 9 girls. How many children are there altogether?"
+  match = raw.match(/^There are (\d+) (.+) and (\d+) (.+)\. How many (.+) are there(?: altogether| in total)?\?$/i);
+  if (match) return `${match[2].charAt(0).toUpperCase() + match[2].slice(1)}: ${match[1]} ta, ${match[4]}: ${match[3]} ta. Jami nechta ${match[5]} bor?`;
+
+  // "Sam had 15 coins. He found 7 more. How many coins does he have now?"
+  match = raw.match(/^(\w+) had (\d+) (.+)\. (?:He|She|They) (?:found|got|received|bought|earned|collected) (\d+) more\. How many (.+) does (?:he|she|they) have(?: now)?\?$/i);
+  if (match) return `${match[1]}da ${match[2]} ta ${match[3]} bor edi. U yana ${match[4]} ta topdi. Endi nechta ${match[3]} bor?`;
+
+  // "A farmer has 24 cows. He buys 13 more. How many cows does he have now?"
+  match = raw.match(/^A (\w+) has (\d+) (.+)\. (?:He|She) (?:gets?|buys?|receives?|finds?|earns?) (\d+) more\. How many (.+) does (?:he|she) have(?: now)?\?$/i);
+  if (match) return `Bir ${match[1]}da ${match[2]} ta ${match[3]} bor. U yana ${match[4]} ta oldi. Endi nechta ${match[3]} bor?`;
+
+  // ── AYIRISH masalalari ───────────────────────────────────────────────────
+
+  // "X had Y things. He/She gave/lost/used Z. How many does he/she have left?"
+  match = raw.match(/^(\w+) has (\d+) (.+)\. (?:He|She|They) (?:gives?|gave|loses?|lost|uses?|used|eats?|ate|breaks?|broke) (\d+)(?:\s+(?:of them|away|to .+))?\. How many (?:.+does (?:he|she|they) have(?: left)?|are left|remain)\?$/i);
+  if (match) return `${match[1]}da ${match[2]} ta ${match[3]} bor. ${match[4]} tasi ketdi. Nechta qoldi?`;
+
+  // "X had Y things. He/She gave Z away. How many are left?"
+  match = raw.match(/^(\w+) had (\d+) (.+)\. (?:He|She|They) (?:gave|lost|used|ate|broke|sold) (\d+)(?: away| of them)?\. How many (?:are left|remain|does (?:he|she|they) have)\?$/i);
+  if (match) return `${match[1]}da ${match[2]} ta ${match[3]} bor edi. ${match[4]} tasi ketdi. Nechta qoldi?`;
+
+  // ── UMUMIY word problem patternlar ──────────────────────────────────────
+
+  match = raw.match(/^(.+) had (\d+) (.+)\. (?:He|She|They) gave (\d+) (?:to .+|away)\. How many (?:are left|does .+ have|remain)\??$/i);
+  if (match) return `${match[1]}da ${match[2]} ta ${match[3]} bor edi. ${match[4]} tasi berildi. Nechta qoldi?`;
+
+  match = raw.match(/^There (?:are|were) (\d+) (.+)\. (\d+) (?:are|were|fly|swim|run|walk) (?:absent|away|eaten|used|lost|broken)\. How many (?:are left|remain|are present)\??$/i);
+  if (match) return `${match[2].charAt(0).toUpperCase() + match[2].slice(1)}: ${match[1]} ta bor edi. ${match[3]} tasi ketdi. Nechta qoldi?`;
+
+  match = raw.match(/^A (\w+) has (\d+) (.+)\. (\d+) (?:are|were) (?:eaten|used|taken|broken|lost)\. How many (?:remain|are left)\??$/i);
+  if (match) return `${match[1].charAt(0).toUpperCase() + match[1].slice(1)}da ${match[2]} ta ${match[3]} bor. ${match[4]} tasi ketdi. Nechta qoldi?`;
+
+  match = raw.match(/^(\w+) has (\d+) (.+)\. (?:He|She) (?:loses?|lost|gives?|gave) (\d+)\. How many does (?:he|she) have\??$/i);
+  if (match) return `${match[1]}da ${match[2]} ta ${match[3]} bor edi. ${match[4]} tasi ketdi. Nechta qoldi?`;
+
+  match = raw.match(/^How many (?:are left|remain)\??$/i);
+  if (match) return 'Nechta qoldi?';
+
+  match = raw.match(/^How many in total\??$/i);
+  if (match) return 'Jami nechta?';
+
+  match = raw.match(/^How many altogether\??$/i);
+  if (match) return 'Hammasi nechta?';
+
+  match = raw.match(/^How many (.+) does (?:he|she|they) have(?: now| in total| left)?\??$/i);
+  if (match) return `Endi nechta ${match[1]} bor?`;
+
+  match = raw.match(/^(\d+) \+ (\d+) = \?$/i);
+  if (match) return `${match[1]} + ${match[2]} = ?`;
+
+  match = raw.match(/^(\d+) - (\d+) = \?$/i);
+  if (match) return `${match[1]} - ${match[2]} = ?`;
+
+  match = raw.match(/^(\d+) × (\d+) = \?$/i);
+  if (match) return `${match[1]} × ${match[2]} = ?`;
+
+  match = raw.match(/^(\d+) ÷ (\d+) = \?$/i);
+  if (match) return `${match[1]} ÷ ${match[2]} = ?`;
+
+  match = raw.match(/^What is the result of (.+)\?$/i);
+  if (match) return `${match[1]} natijasi necha?`;
+
+  match = raw.match(/^Calculate: (.+)$/i);
+  if (match) return `Hisoblang: ${match[1]}`;
+
+  match = raw.match(/^Solve for x: (.+)$/i);
+  if (match) return `x ni toping: ${match[1]}`;
+  
+  match = raw.match(/^Simplify the expression: (.+)$/i);
+  if (match) return `Ifodani soddalashtiring: ${match[1]}`;
+
   // If no pattern matches, return original
   return raw;
 };
@@ -201,10 +298,29 @@ export const toUzbekExplanation = (text?: string | null): string => {
     .replace(/^Drag\s+/i, 'Joylashtiring: ')
     .replace(/^Sort\s+/i, 'Tartiblang: ')
     .replace(/^Arrange\s+/i, 'Tartiblang: ')
-    .replace(/^Find\s+/i, 'Topping: ')
+    .replace(/^Find\s+/i, 'Toping: ')
     .replace(/^Compare\s+/i, 'Solishtiring: ')
     .replace(/^Click\s+/i, 'Bosing: ')
-    .replace(/^Type\s+/i, 'Yozing: ');
+    .replace(/^Type\s+/i, 'Yozing: ')
+    .replace(/^Add (\d+) and (\d+)/i, '$1 va $2 ni qo\'shing')
+    .replace(/^Subtract (\d+) from (\d+)/i, '$2 dan $1 ni ayiring')
+    .replace(/^Multiply (\d+) by (\d+)/i, '$1 ni $2 ga ko\'paytiring')
+    .replace(/^Divide (\d+) by (\d+)/i, '$1 ni $2 ga bo\'ling')
+    .replace(/The answer is (\d+)/i, 'Javob: $1')
+    .replace(/Count the (.+)/i, '$1 ni sanang')
+    .replace(/Remember:/i, 'Eslab qoling:')
+    .replace(/Think about/i, 'O\'ylang:')
+    .replace(/\bsubtract\b/gi, 'ayiring')
+    .replace(/\badd\b/gi, 'qo\'shing')
+    .replace(/\bmultiply\b/gi, 'ko\'paytiring')
+    .replace(/\bdivide\b/gi, 'bo\'ling')
+    .replace(/\bfrom\b/gi, 'dan')
+    .replace(/\band\b/gi, 'va')
+    .replace(/\bthe answer\b/gi, 'javob')
+    .replace(/\bequals\b/gi, 'teng')
+    .replace(/\bremaining\b/gi, 'qolgan')
+    .replace(/\bleft\b/gi, 'qoldi')
+    .replace(/\btotal\b/gi, 'jami');
 };
 
 export const toUzbekOption = (text: string): string => {

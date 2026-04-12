@@ -86,7 +86,7 @@ export const useSaveProgress = () => {
       xpEarned: number;
       timeSpentSeconds?: number;
     }) => {
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error('Tasdiqlanmagan');
       const accuracy = total > 0 ? Number(((correct / total) * 100).toFixed(2)) : 0;
       
       const { data: existing } = await supabase

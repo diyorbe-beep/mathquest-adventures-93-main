@@ -135,7 +135,7 @@ const ParentStats = () => {
                     <div key={m.id} className="rounded-xl bg-background border border-border px-3 py-2">
                       <p className="font-bold text-sm text-foreground">{m.topics?.icon ?? '📘'} {toUzbekTopicName(m.topics?.name ?? 'Mavzu')}</p>
                       <p className="text-xs font-semibold text-muted-foreground">
-                        Mastery: {m.mastery_score}% · Urinish: {m.attempts} · To‘g‘ri: {m.correct_count}
+                        O'zlashtirish: {m.mastery_score}% · Urinish: {m.attempts} · To‘g‘ri: {m.correct_count}
                       </p>
                     </div>
                   ))}

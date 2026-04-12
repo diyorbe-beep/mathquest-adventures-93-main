@@ -19,13 +19,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // onAuthStateChange fires immediately with the current session (INITIAL_SESSION event),
+    // so getSession() is redundant and causes a double-set race condition.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -36,7 +32,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, username: string) => {
     try {
-      console.log('Signup attempt:', { email, username, passwordLength: password.length });
+      // Log signup attempt in development only
+      if (import.meta.env.DEV) {
+        console.log('Signup attempt:', { email, username, passwordLength: password.length });
+      }
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -44,36 +43,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         options: { data: { username } },
       });
       
-      console.log('Signup response:', { data, error });
+      if (import.meta.env.DEV) {
+        console.log('Signup response:', { data, error });
+      }
       
       if (error) {
-        console.error('Supabase signup error:', error);
+        // Use proper error handling
+        if (import.meta.env.DEV) {
+          console.error('Supabase ro\'yxatdan o\'tish xatosi:', error);
+        }
         return { error };
       }
       
       return { error: null };
     } catch (err) {
-      console.error('Unexpected signup error:', err);
+      // Use proper error handling
+      if (import.meta.env.DEV) {
+        console.error('Kutilmagan ro\'yxatdan o\'tish xatosi:', err);
+      }
       return { error: err as Error };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('Signin attempt:', { email, passwordLength: password.length });
+      // Log signin attempt in development only
+      if (import.meta.env.DEV) {
+        console.log('Signin attempt:', { email, passwordLength: password.length });
+      }
       
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
-      console.log('Signin response:', { data, error });
+      if (import.meta.env.DEV) {
+        console.log('Signin response:', { data, error });
+      }
       
       if (error) {
-        console.error('Supabase signin error:', error);
+        // Use proper error handling
+        if (import.meta.env.DEV) {
+          console.error('Supabase tizimga kirish xatosi:', error);
+        }
         return { error };
       }
       
       return { error: null };
     } catch (err) {
-      console.error('Unexpected signin error:', err);
+      // Use proper error handling
+      if (import.meta.env.DEV) {
+        console.error('Kutilmagan tizimga kirish xatosi:', err);
+      }
       return { error: err as Error };
     }
   };

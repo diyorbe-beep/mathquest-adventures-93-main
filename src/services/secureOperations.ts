@@ -1,215 +1,272 @@
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/integrations/supabase/types';
-import { env } from '@/lib/env';
+// Secure API endpoints for server-side operations
+// All sensitive operations now go through server API routes
 
-// Server-side Supabase client for secure operations
-export const supabaseAdmin = createClient<Database>(
-  env.VITE_SUPABASE_URL,
-  env.VITE_SUPABASE_PUBLISHABLE_KEY,
-  {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    }
-  }
-);
+interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
 
-// Secure operations using direct SQL
+// Secure operations using API endpoints
 export class SecureOperations {
-  static async purchaseItem(userId: string, itemId: string, quantity: number = 1) {
-    // Cast to any to bypass stale type definitions from the client-side
-    const { data, error } = await (supabaseAdmin as any).rpc('process_marketplace_order', {
-      p_items: [{ item_id: itemId, quantity }],
-      p_idempotency_key: `legacy_${userId}_${itemId}_${Date.now()}`
-    });
-
-    if (error) {
-      throw new Error(`Xaridda xatolik: ${error.message}`);
-    }
-
-    return { 
-      success: true, 
-      message: 'Xarid muvaffaqiyatli', 
-      newBalance: (data as any).new_balance 
-    };
-  }
-  
-  static async awardXP(userId: string, lessonId: string, amount: number, source: string = 'lesson') {
-    // Validate XP amount
-    if (amount <= 0 || amount > 100) {
-      return { success: false, message: 'Invalid XP amount' };
-    }
-    
-    // Check daily XP limit
-    const today = new Date().toISOString().split('T')[0];
-    const { data: todayXP, error: xpError } = await supabaseAdmin
-      .from('xp_logs')
-      .select('amount')
-      .eq('user_id', userId)
-      .eq('source', source)
-      .gte('created_at', today)
-      .lt('created_at', new Date(Date.now() + 86400000).toISOString());
-    
-    if (xpError) {
-      throw new Error(`Failed to check daily XP: ${xpError.message}`);
-    }
-    
-    const totalToday = todayXP?.reduce((sum, log) => sum + log.amount, 0) || 0;
-    const maxDailyXP = 1000;
-    
-    if (totalToday + amount > maxDailyXP) {
-      return { success: false, message: 'Daily XP limit exceeded' };
-    }
-    
-    // Get current stats
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .select('xp, level')
-      .eq('user_id', userId)
-      .single();
-    
-    if (profileError) {
-      throw new Error(`Failed to get profile: ${profileError.message}`);
-    }
-    
-    const currentXP = profile?.xp || 0;
-    const newXP = currentXP + amount;
-    const newLevel = Math.floor(newXP / 100) + 1;
-    
-    // Update profile
-    const { error: updateError } = await supabaseAdmin
-      .from('profiles')
-      .update({
-        xp: newXP,
-        level: newLevel,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', userId);
-    
-    if (updateError) {
-      throw new Error(`Failed to update XP: ${updateError.message}`);
-    }
-    
-    // Log XP award
-    await supabaseAdmin
-      .from('xp_logs')
-      .insert({
-        user_id: userId,
-        amount,
-        source,
-        lesson_id: lessonId
+  static async purchaseItem(userId: string, itemId: string, quantity: number = 1): Promise<ApiResponse> {
+    try {
+      const response = await fetch('/api/secure/purchase', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await this.getAuthToken()}`,
+        },
+        body: JSON.stringify({
+          userId,
+          itemId,
+          quantity,
+          idempotencyKey: `purchase_${userId}_${itemId}_${Date.now()}`
+        })
       });
-    
-    return { 
-      success: true, 
-      newLevel, 
-      newXP, 
-      message: 'XP awarded successfully' 
-    };
-  }
-  
-  static async validateUserProgress(userId: string, lessonId: string) {
-    const { data, error } = await supabaseAdmin
-      .from('user_progress' as any)
-      .select('*')
-      .eq('user_id', userId)
-      .eq('lesson_id', lessonId)
-      .single();
-    
-    if (error && error.code !== 'PGRST116') {
-      throw new Error(`Progress validation failed: ${error.message}`);
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Xarid amalga oshmadi');
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Xarid amalga oshmadi'
+      };
     }
-    
-    return data;
   }
   
-  static async logActivity(userId: string, action: string, metadata: any = {}) {
-    const { error } = await supabaseAdmin
-      .from('activity_logs' as any)
-      .insert({
-        user_id: userId,
-        action,
-        metadata
+  static async awardXP(userId: string, lessonId: string, amount: number, source: string = 'lesson'): Promise<ApiResponse> {
+    try {
+      const response = await fetch('/api/secure/award-xp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await this.getAuthToken()}`,
+        },
+        body: JSON.stringify({
+          userId,
+          lessonId,
+          amount,
+          source
+        })
       });
-    
-    if (error) {
-      console.error('Activity logging failed:', error);
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'XP berish amalga oshmadi');
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'XP berish amalga oshmadi'
+      };
     }
   }
   
-  static async getUserStats(userId: string) {
-    const { data, error } = await supabaseAdmin
-      .from('profiles' as any)
-      .select('xp, level, hearts, coins, streak_days, username')
-      .eq('user_id', userId)
-      .single();
+  static async awardCoins(userId: string, amount: number, source: string = 'lesson', lessonId?: string): Promise<ApiResponse> {
+    try {
+      const response = await fetch('/api/secure/award-coins', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await this.getAuthToken()}`,
+        },
+        body: JSON.stringify({
+          userId,
+          amount,
+          source,
+          lessonId
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Coin berish muvaffaqatsiz');
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Coin berish muvaffaqatsiz'
+      };
+    }
+  }
+  
+  static async validateUserProgress(userId: string, lessonId: string): Promise<ApiResponse> {
+    try {
+      const response = await fetch('/api/secure/validate-progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await this.getAuthToken()}`,
+        },
+        body: JSON.stringify({
+          userId,
+          lessonId
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Taraqqiyotni tekshirib bo\'lmadi');
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Taraqqiyotni tekshirib bo\'lmadi'
+      };
+    }
+  }
+  
+  static async logActivity(userId: string, action: string, metadata: any = {}): Promise<ApiResponse> {
+    try {
+      const response = await fetch('/api/secure/log-activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await this.getAuthToken()}`,
+        },
+        body: JSON.stringify({
+          userId,
+          action,
+          metadata
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Faollikni qayd etib bo\'lmadi');
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Faollikni qayd etib bo\'lmadi'
+      };
+    }
+  }
+  
     
-    if (error) {
-      throw new Error(`Failed to get user stats: ${error.message}`);
+  static async getUserStats(userId: string): Promise<ApiResponse> {
+    try {
+      const response = await fetch('/api/secure/user-stats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${await this.getAuthToken()}`,
+        },
+        body: JSON.stringify({
+          userId
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Foydalanuvchi statistikasini olish muvaffaqiyatsiz');
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Foydalanuvchi statistikasini olish muvaffaqiyatsiz'
+      };
+    }
+  }
+
+  private static async getAuthToken(): Promise<string> {
+    // Get current session token from Supabase auth
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.access_token) {
+      throw new Error('Autentifikatsiya tokeni mavjud emas');
     }
     
-    return data;
+    return session.access_token;
   }
 }
 
-// Input validation utilities
-export class InputValidator {
-  static validateEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-  
-  static validateUsername(username: string): { valid: boolean; message?: string } {
-    if (!username || username.length < 3) {
-      return { valid: false, message: 'Username must be at least 3 characters' };
-    }
-    
-    if (username.length > 20) {
-      return { valid: false, message: 'Username must be less than 20 characters' };
-    }
-    
-    const usernameRegex = /^[a-zA-Z0-9_]+$/;
-    if (!usernameRegex.test(username)) {
-      return { valid: false, message: 'Username can only contain letters, numbers, and underscores' };
-    }
-    
-    return { valid: true };
-  }
-  
-  static validatePurchaseQuantity(quantity: number): boolean {
-    return Number.isInteger(quantity) && quantity > 0 && quantity <= 100;
-  }
-  
-  static sanitizeInput(input: string): string {
-    return input.trim().replace(/[<>]/g, '');
-  }
-}
+// Import enhanced security utilities
+import { InputValidator as EnhancedInputValidator } from '@/lib/security';
+
+// Re-export enhanced validator for backward compatibility
+export const InputValidator = EnhancedInputValidator;
 
 // Error handling utilities
 export class ErrorHandler {
   static handleDatabaseError(error: any): { message: string; code?: string } {
     if (error?.code === '23505') {
-      return { message: 'Username already exists', code: 'DUPLICATE_USERNAME' };
+      return { message: 'Foydalanuvchi nomi allaqachon mavjud', code: 'DUPLICATE_USERNAME' };
     }
     
     if (error?.code === '23514') {
-      return { message: 'Invalid input data', code: 'INVALID_INPUT' };
+      return { message: 'Noto\'g\'ri kirish ma\'lumotlari', code: 'INVALID_INPUT' };
     }
     
     if (error?.code === '42501') {
-      return { message: 'Permission denied', code: 'PERMISSION_DENIED' };
+      return { message: 'Ruxsat berilmadi', code: 'PERMISSION_DENIED' };
     }
     
-    return { message: error?.message || 'An error occurred', code: error?.code };
+    return { message: error?.message || 'Xato yuz berdi', code: error?.code };
   }
   
   static logError(error: any, context: string = ''): void {
-    console.error(`[${context}] Error:`, {
-      message: error?.message,
-      code: error?.code,
-      details: error?.details,
-      stack: error?.stack,
-      timestamp: new Date().toISOString()
-    });
+    // Use proper logging service instead of console
+    if (import.meta.env.DEV) {
+      console.error(`[${context}] Xato:`, {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        stack: error?.stack,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      // In production, send to error tracking
+      this.sendToErrorService(error, context);
+    }
+  }
+
+  private static sendToErrorService(error: any, context: string): void {
+    // TODO: Implement Sentry or other error tracking service
+    // For now, we'll use a fallback logging mechanism
+    try {
+      fetch('/api/errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          error: {
+            message: error?.message,
+            stack: error?.stack,
+            code: error?.code
+          },
+          context,
+          timestamp: new Date().toISOString(),
+          url: window.location.href,
+          userAgent: navigator.userAgent
+        })
+      }).catch(() => {
+        // Silent fail - don't throw in error handler
+      });
+    } catch {
+      // Silent fail
+    }
   }
 }

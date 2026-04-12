@@ -14,7 +14,17 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ["react", "react-dom", "react-dom/client"],
+    include: [
+      "react", 
+      "react-dom", 
+      "react-dom/client",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-dropdown-menu",
+      "@radix-ui/react-select",
+      "@tanstack/react-query",
+      "framer-motion",
+      "lucide-react"
+    ],
   },
   plugins: [
     react(),
@@ -106,16 +116,52 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Vendor chunks
-          vendor: ['react', 'react-dom'],
-          radix: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          // Core React
+          react: ['react', 'react-dom'],
+          
+          // Radix UI — grouped together (they're small individually)
+          'ui-radix': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast',
+          ],
+          
+          // External services
           supabase: ['@supabase/supabase-js'],
+          
+          // State management
           query: ['@tanstack/react-query'],
+          
+          // Animation
           motion: ['framer-motion'],
+          
+          // Icons
           icons: ['lucide-react'],
+          
+          // Forms
+          forms: ['@hookform/resolvers', 'react-hook-form'],
+          
+          // Date utilities
+          date: ['date-fns'],
+          
+          // Charts
+          charts: ['recharts'],
+          
+          // Misc utilities
+          utils: ['clsx', 'tailwind-merge', 'class-variance-authority']
         },
       },
     },
     chunkSizeWarningLimit: 1000,
+    // Enable tree-shaking and minification (esbuild is Vite 5's built-in, no extra dep)
+    minify: 'esbuild',
+    // Optimize dependencies
+    commonjsOptions: {
+      include: [/node_modules/],
+    },
   },
+  // Drop console/debugger only in production builds
+  esbuild: mode === 'production' ? { drop: ['console', 'debugger'] } : {},
 }));

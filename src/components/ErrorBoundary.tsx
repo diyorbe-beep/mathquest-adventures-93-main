@@ -27,7 +27,7 @@ class ErrorBoundary extends Component<Props, State> {
     
     // Log to console in development
     if (import.meta.env.DEV) {
-      console.error('ErrorBoundary caught:', error, info);
+      console.error('ErrorBoundary ushladi:', error, info);
     }
     
     // Call custom error handler if provided
@@ -36,7 +36,7 @@ class ErrorBoundary extends Component<Props, State> {
     // Log to external service in production
     if (import.meta.env.PROD) {
       // TODO: Add error logging service (Sentry, LogRocket, etc.)
-      console.error('Production Error:', {
+      console.error('Ishlab chiqarish xatosi:', {
         message: error.message,
         stack: error.stack,
         componentStack: info.componentStack,
@@ -68,7 +68,7 @@ class ErrorBoundary extends Component<Props, State> {
             {import.meta.env.DEV && this.state.errorInfo && (
               <details className="mb-4 text-left">
                 <summary className="cursor-pointer text-sm font-mono text-muted-foreground">
-                  Error Details (Dev Only)
+                  Xato tafsilotlari (faqat ishlab chiquvchilar uchun)
                 </summary>
                 <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto max-h-32">
                   {this.state.error?.stack}

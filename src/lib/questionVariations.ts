@@ -1,5 +1,5 @@
-// Question answer variation generator for MathQuest
-// Creates multiple correct answer variations to prevent single-answer memorization
+// MathQuest uchun savol javob variantlari generatori
+// Bitta javobni yodlashdan oldini olish uchun bir nechta to'g'ri javob variantlarini yaratadi
 
 export interface AnswerVariation {
   text: string;
@@ -8,7 +8,7 @@ export interface AnswerVariation {
 }
 
 export class QuestionVariationGenerator {
-  // Generate multiple choice variations for a given question
+  // Berilgan savol uchun ko'p tanlov variantlarini yaratish
   static generateMultipleChoiceVariations(
     correctAnswer: string,
     questionType: string,
@@ -16,10 +16,10 @@ export class QuestionVariationGenerator {
   ): AnswerVariation[] {
     const allVariations: AnswerVariation[] = [];
     
-    // Generate multiple correct answer variations
+    // Bir nechta to'g'ri javob variantlarini yaratish
     const correctVariations = this.generateCorrectAnswerVariations(correctAnswer, questionType);
     
-    // 1. Pick ONE correct variation randomly to be 'THE' correct answer for this MCQ instance
+    // 1. Bu KT uchun 'ASOSIY' to'g'ri javob sifatida BIRTA to'g'ri variantni tasodiy tanlash
     const selectedCorrect = this.shuffleArray(correctVariations)[0];
     
     allVariations.push({
@@ -28,13 +28,13 @@ export class QuestionVariationGenerator {
       explanation: this.getExplanation(correctAnswer, questionType)
     });
     
-    // 2. Generate distractors
+    // 2. Chalg'ituvchi javoblarni yaratish
     const distractors = this.generateDistractors(correctAnswer, questionType, difficulty);
     
-    // Ensure distractors don't include ANY of the correct variations
+    // Chalg'ituvchilar hech qanday to'g'ri variantlarni o'z ichiga olmasligini ta'minlash
     const filteredDistractors = distractors.filter(d => !correctVariations.includes(d));
     
-    // 3. Add up to 3 distractors to make it 4 options total
+    // 3. Jami 4 variant bo'lishi uchun 3 tagacha chalg'ituvchi qo'shish
     filteredDistractors.slice(0, 3).forEach(distractor => {
       allVariations.push({
         text: distractor,
@@ -43,21 +43,21 @@ export class QuestionVariationGenerator {
       });
     });
     
-    // Shuffle and return
+    // Aralashtirib qaytarish
     return this.shuffleArray(allVariations);
   }
   
-  // Generate multiple correct answer variations
+  // Bir nechta to'g'ri javob variantlarini yaratish
   private static generateCorrectAnswerVariations(
     correctAnswer: string,
     questionType: string
   ): string[] {
-    // Keep it simple: only the original correct answer should be shown as an option
-    // unless it's a very specific case.
+    // Sodda saqlang: variant sifatida faqat asl to'g'ri javob ko'rsatilishi kerak
+    // Agar bu juda aniq holat bo'lmasa.
     return [correctAnswer.trim()];
   }
   
-  // Find factors of a number
+  // Sonning bo'luvchilarini topish
   private static findFactors(n: number): [number, number][] {
     const factors: [number, number][] = [];
     for (let i = 2; i <= Math.sqrt(n); i++) {
@@ -68,7 +68,7 @@ export class QuestionVariationGenerator {
     return factors;
   }
   
-  // Generate distractors based on question type and difficulty
+  // Savol turi va qiyinchilikka asoslangan chalg'ituvchilarni yaratish
   private static generateDistractors(
     correctAnswer: string,
     questionType: string,
@@ -76,11 +76,11 @@ export class QuestionVariationGenerator {
   ): string[] {
     const distractors: string[] = [];
     
-    // Parse correct answer if it's a number
+    // To'g'ri javobni raqam bo'lsa tahlil qilish
     const correctNum = parseFloat(correctAnswer);
     
     if (!isNaN(correctNum)) {
-      // Mathematical distractors
+      // Matematik chalg'ituvchilar
       if (questionType.includes('addition') || questionType.includes('plus')) {
         distractors.push(
           (correctNum + 1).toString(),
@@ -121,10 +121,10 @@ export class QuestionVariationGenerator {
     } else {
       // Non-numerical distractors
       distractors.push(
-        'Not sure',
-        'None of the above',
-        'Cannot determine',
-        'Insufficient information'
+        'Bilmaysiz',
+        'Yuqoridagilarning hech biri',
+        'Aniqlab bo\'lmaydi',
+        'Ma\'lumot yetarli emas'
       );
     }
     
@@ -149,7 +149,7 @@ export class QuestionVariationGenerator {
       'comparison': 'Solishtirishni to\'g\'ri bajardingiz. Sonlarning kattalik yoki kichikligini aniqladingiz.'
     };
     
-    // Find matching explanation
+    // Mos keladigan izohni topish
     for (const [key, explanation] of Object.entries(explanations)) {
       if (questionType.toLowerCase().includes(key)) {
         return explanation;
@@ -159,7 +159,7 @@ export class QuestionVariationGenerator {
     return 'To\'g\'ri javob! Hisobingiz to\'g\'ri chiqdi.';
   }
   
-  // Generate explanation for wrong answers
+  // Noto'g'ri javoblar uchun izoh yaratish
   private static getWrongAnswerExplanation(wrongAnswer: string, correctAnswer: string): string {
     const wrongNum = parseFloat(wrongAnswer);
     const correctNum = parseFloat(correctAnswer);
@@ -181,7 +181,7 @@ export class QuestionVariationGenerator {
     return 'Bu javob noto\'g\'ri. Qayta o\'ylab ko\'ring.';
   }
   
-  // Shuffle array using Fisher-Yates algorithm
+  // Fisher-Yates algoritmi yordamida massivni aralashtirish
   private static shuffleArray<T>(array: T[]): T[] {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -191,7 +191,7 @@ export class QuestionVariationGenerator {
     return shuffled;
   }
   
-  // Generate equation builder variations
+  // Tenglik quruvchi variantlarini yaratish
   static generateEquationVariations(
     correctAnswer: string,
     questionText: string
@@ -251,7 +251,7 @@ export class QuestionVariationGenerator {
     return this.shuffleArray(variations);
   }
   
-  // Generate drag and drop variations
+  // Tortib va tashlab tashlash variantlarini yaratish
   static generateDragDropVariations(
     correctAnswer: string,
     options: string[],
@@ -260,8 +260,8 @@ export class QuestionVariationGenerator {
     const variations: AnswerVariation[] = [];
     const correctItems = correctAnswer.split(',').map(i => i.trim());
     
-    // 1. Add ALL permutations of the correct items for selection mode
-    // (since order shouldn't matter for selection)
+    // 1. Tanlash rejimi uchun to'g'ri elementlarning BARCHASI permutatsiyasini qo'shing
+    // (tartib muhim emasligi uchun)
     const isSelection = correctItems.length < options.length;
     
     if (isSelection) {
@@ -274,7 +274,7 @@ export class QuestionVariationGenerator {
         });
       });
 
-      // Generate wrong variations (extra items)
+      // Noto'g'ri variantlarni yaratish (qo'shimcha elementlar)
       const extraItems = options.filter(item => !correctItems.includes(item));
       extraItems.forEach(extraItem => {
         const wrongSelection = [...correctItems, extraItem];
@@ -285,7 +285,7 @@ export class QuestionVariationGenerator {
         });
       });
       
-      // Generate wrong variations (missing items)
+      // Noto'g'ri variantlarni yaratish (yo'qolgan elementlar)
       correctItems.forEach(missingItem => {
         const wrongSelection = correctItems.filter(item => item !== missingItem);
         if (wrongSelection.length > 0) {
@@ -297,14 +297,14 @@ export class QuestionVariationGenerator {
         }
       });
     } else {
-      // Ordering question - add the original correct answer
+      // Tartiblash savoli - asl to'g'ri javobni qo'shish
       variations.push({
         text: correctAnswer,
         isCorrect: true,
         explanation: 'To\'g\'ri tartib!'
       });
 
-      // Generate wrong orders by swapping adjacent elements
+      // Qo'shni elementlarni almashtirib noto'g'ri tartiblar yaratish
       for (let i = 0; i < correctItems.length - 1; i++) {
         const wrongOrder = [...correctItems];
         [wrongOrder[i], wrongOrder[i + 1]] = [wrongOrder[i + 1], wrongOrder[i]];
@@ -322,7 +322,7 @@ export class QuestionVariationGenerator {
     return this.shuffleArray(variations);
   }
 
-  // Helper to get permutations
+  // Permutatsiyalarni olish uchun yordamchi funksiya
   private static getPermutations<T>(arr: T[]): T[][] {
     if (arr.length <= 1) return [arr];
     const result: T[][] = [];
@@ -337,7 +337,7 @@ export class QuestionVariationGenerator {
   }
 }
 
-// Utility function to apply variations to questions
+// Savollarga variantlarni qo'llash uchun yordamchi funksiya
 export const applyQuestionVariations = (
   questions: any[],
   variationSeed?: string
@@ -350,7 +350,7 @@ export const applyQuestionVariations = (
     
     let variations: AnswerVariation[] = [];
     
-    // Generate variations based on question type
+    // Savol turiga asoslangan variantlarni yaratish
     if (questionType === 'multiple_choice' || questionType === 'type_answer') {
       variations = QuestionVariationGenerator.generateMultipleChoiceVariations(
         correctAnswer,
@@ -370,14 +370,14 @@ export const applyQuestionVariations = (
       );
     }
     
-    // Apply variations to question
+    // Variantlarni savolga qo'llash
     const updatedQuestion = {
       ...question,
       variations,
       hasVariations: variations.length > 1
     };
 
-    // For multiple choice, override the options with the shuffled variations
+    // Ko'p tanlov uchun variantlarni aralashtirib variantlarni almashtirish
     if (questionType === 'multiple_choice' && variations.length > 0) {
       updatedQuestion.options = variations.map(v => v.text);
     }

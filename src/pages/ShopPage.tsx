@@ -57,14 +57,14 @@ const ShopPage = () => {
     { id: 'all', name: 'Barchasi', icon: '🛍️' },
     { id: 'hearts', name: 'Yuraklar', icon: '❤️' },
     { id: 'boost', name: 'Tezlashtirish', icon: '⚡' },
-    { id: 'avatar', name: 'Avatar', icon: '👤' },
+    { id: 'avatar', name: 'Avatarkar', icon: '👤' },
     { id: 'hint', name: 'Maslahat', icon: '💡' },
   ];
 
   const handleCheckout = async () => {
     if (cartItems.length === 0) return;
     if (coins < cartTotal) {
-      toast.error('Coinlar yetarli emas!');
+      toast.error('Tangalar yetarli emas!');
       return;
     }
 
@@ -97,34 +97,12 @@ const ShopPage = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="rounded-full">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-xl font-bold tracking-tight">Marketplace</h1>
+            <h1 className="text-xl font-bold tracking-tight">Do'kon</h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-yellow-500/10 text-yellow-500 px-3 py-1.5 rounded-full font-bold text-sm border border-yellow-500/20">
               <span className="text-base">🪙</span> {coins}
             </div>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="rounded-full"
-              onClick={() => navigate('/orders')}
-              title="Buyurtmalar"
-            >
-              <Package className="h-5 w-5" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="relative rounded-full"
-              onClick={() => setIsCartOpen(true)}
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {cartItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                  {cartItems.length}
-                </span>
-              )}
-            </Button>
           </div>
         </div>
       </header>
@@ -179,7 +157,14 @@ const ShopPage = () => {
                   <div className="flex-1">
                     <div className="mb-1 flex items-center gap-2">
                       <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        {item.category}
+                        {({
+                          all: 'Barchasi',
+                          hearts: 'Yuraklar',
+                          boost: 'Tezlashtirish',
+                          avatar: 'Avatar',
+                          hint: 'Maslahat',
+                          general: 'Umumiy'
+                        } as Record<string, string>)[item.category] || item.category}
                       </span>
                       <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
                       <span className="text-xs font-bold text-primary flex items-center gap-1">

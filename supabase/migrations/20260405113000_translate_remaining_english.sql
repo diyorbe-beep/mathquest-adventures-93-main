@@ -50,30 +50,30 @@ SET
     ELSE explanation
   END,
   options = CASE 
-    WHEN '["22","12","15","19"]'::jsonb THEN '["22","12","15","19"]'::jsonb
-    WHEN '["7","17","25","19"]'::jsonb THEN '["7","17","25","19"]'::jsonb
-    WHEN '["16","4","11","20"]'::jsonb THEN '["16","4","11","20"]'::jsonb
-    WHEN '["3","4","5","6"]'::jsonb THEN '["3","4","5","6"]'::jsonb
-    WHEN '["1/4","1/2","3/4","2/3"]'::jsonb THEN '["1/4","1/2","3/4","2/3"]'::jsonb
-    WHEN '["0.25","0.5","0.75","1.0"]'::jsonb THEN '["0.25","0.5","0.75","1.0"]'::jsonb
-    WHEN '["3","4","5","6"]'::jsonb THEN '["3","4","5","6"]'::jsonb
-    WHEN '["8","12","16","20"]'::jsonb THEN '["8","12","16","20"]'::jsonb
-    WHEN '["15","30","45","60"]'::jsonb THEN '["15","30","45","60"]'::jsonb
-    WHEN '["90","45","60","30"]'::jsonb THEN '["90","45","60","30"]'::jsonb
-    WHEN '["3","6","9","12"]'::jsonb THEN '["3","6","9","12"]'::jsonb
-    WHEN '["4","8","12","16"]'::jsonb THEN '["4","8","12","16"]'::jsonb
-    WHEN '["10","20","30","40"]'::jsonb THEN '["10","20","30","40"]'::jsonb
-    WHEN '["5","10","15","20"]'::jsonb THEN '["5","10","15","20"]'::jsonb
-    WHEN '["2","4","6","8"]'::jsonb THEN '["2","4","6","8"]'::jsonb
-    WHEN '["3:00","3:30","4:00","4:30"]'::jsonb THEN '["3:00","3:30","4:00","4:30"]'::jsonb
-    WHEN '["6","7","8","9"]'::jsonb THEN '["6","7","8","9"]'::jsonb
-    WHEN '["12","1","2","3"]'::jsonb THEN '["12","1","2","3"]'::jsonb
-    WHEN '["15","30","45","60"]'::jsonb THEN '["15","30","45","60"]'::jsonb
-    WHEN '["5","10","15","20"]'::jsonb THEN '["5","10","15","20"]'::jsonb
-    WHEN '["7","14","21","28"]'::jsonb THEN '["7","14","21","28"]'::jsonb
-    WHEN '["9","18","27","36"]'::jsonb THEN '["9","18","27","36"]'::jsonb
-    WHEN '["11","22","33","44"]'::jsonb THEN '["11","22","33","44"]'::jsonb
-    WHEN '["13","26","39","52"]'::jsonb THEN '["13","26","39","52"]'::jsonb
+    WHEN options::text = '["22","12","15","19"]' THEN '["22","12","15","19"]'::jsonb
+    WHEN options::text = '["7","17","25","19"]' THEN '["7","17","25","19"]'::jsonb
+    WHEN options::text = '["16","4","11","20"]' THEN '["16","4","11","20"]'::jsonb
+    WHEN options::text = '["3","4","5","6"]' THEN '["3","4","5","6"]'::jsonb
+    WHEN options::text = '["1/4","1/2","3/4","2/3"]' THEN '["1/4","1/2","3/4","2/3"]'::jsonb
+    WHEN options::text = '["0.25","0.5","0.75","1.0"]' THEN '["0.25","0.5","0.75","1.0"]'::jsonb
+    WHEN options::text = '["3","4","5","6"]' THEN '["3","4","5","6"]'::jsonb
+    WHEN options::text = '["8","12","16","20"]' THEN '["8","12","16","20"]'::jsonb
+    WHEN options::text = '["15","30","45","60"]' THEN '["15","30","45","60"]'::jsonb
+    WHEN options::text = '["90","45","60","30"]' THEN '["90","45","60","30"]'::jsonb
+    WHEN options::text = '["3","6","9","12"]' THEN '["3","6","9","12"]'::jsonb
+    WHEN options::text = '["4","8","12","16"]' THEN '["4","8","12","16"]'::jsonb
+    WHEN options::text = '["10","20","30","40"]' THEN '["10","20","30","40"]'::jsonb
+    WHEN options::text = '["5","10","15","20"]' THEN '["5","10","15","20"]'::jsonb
+    WHEN options::text = '["2","4","6","8"]' THEN '["2","4","6","8"]'::jsonb
+    WHEN options::text = '["3:00","3:30","4:00","4:30"]' THEN '["3:00","3:30","4:00","4:30"]'::jsonb
+    WHEN options::text = '["6","7","8","9"]' THEN '["6","7","8","9"]'::jsonb
+    WHEN options::text = '["12","1","2","3"]' THEN '["12","1","2","3"]'::jsonb
+    WHEN options::text = '["15","30","45","60"]' THEN '["15","30","45","60"]'::jsonb
+    WHEN options::text = '["5","10","15","20"]' THEN '["5","10","15","20"]'::jsonb
+    WHEN options::text = '["7","14","21","28"]' THEN '["7","14","21","28"]'::jsonb
+    WHEN options::text = '["9","18","27","36"]' THEN '["9","18","27","36"]'::jsonb
+    WHEN options::text = '["11","22","33","44"]' THEN '["11","22","33","44"]'::jsonb
+    WHEN options::text = '["13","26","39","52"]' THEN '["13","26","39","52"]'::jsonb
     ELSE options
   END,
   correct_answer = CASE correct_answer

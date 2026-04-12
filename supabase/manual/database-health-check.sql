@@ -5,35 +5,35 @@
 -- Check if required tables exist
 SELECT 
   table_name,
-  'Table exists' as status
+  'Jadval mavjud' as holat
 FROM information_schema.tables 
 WHERE table_schema = 'public' 
   AND table_name IN ('profiles', 'user_roles', 'auth.users')
 ORDER BY table_name;
 
--- Check if triggers exist
+-- Triggerlar mavjudligini tekshirish
 SELECT 
   trigger_name,
   event_manipulation,
-  'Trigger exists' as status
+  'Trigger mavjud' as holat
 FROM information_schema.triggers 
 WHERE trigger_schema = 'public'
   AND trigger_name IN ('on_auth_user_created', 'on_auth_user_role_created')
 ORDER BY trigger_name;
 
--- Check if functions exist
+-- Funksiyalar mavjudligini tekshirish
 SELECT 
   routine_name,
-  'Function exists' as status
+  'Funksiya mavjud' as holat
 FROM information_schema.routines 
 WHERE routine_schema = 'public'
   AND routine_name IN ('handle_new_user', 'handle_new_user_role')
 ORDER BY routine_name;
 
--- Check indexes
+-- Indekslarni tekshirish
 SELECT 
   indexname,
-  'Index exists' as status
+  'Indeks mavjud' as holat
 FROM pg_indexes 
 WHERE schemaname = 'public'
   AND indexname = 'idx_profiles_username_lower_unique';
@@ -55,19 +55,18 @@ BEGIN
     ''
   );
   
-  RAISE NOTICE 'Username extraction test result: %', result;
+  RAISE NOTICE 'Foydalanuvchi nomi ajratish natijasi: %', result;
   
-  -- Check for potential conflicts
   IF EXISTS (
     SELECT 1 FROM public.profiles WHERE lower(username) = lower(result)
   ) THEN
-    RAISE NOTICE 'Username conflict detected for: %', result;
+    RAISE NOTICE 'Foydalanuvchi nomi band: %', result;
   ELSE
-    RAISE NOTICE 'Username available: %', result;
+    RAISE NOTICE 'Foydalanuvchi nomi bo''sh: %', result;
   END IF;
   
 EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE 'Test failed: %', SQLERRM;
+  RAISE NOTICE 'Test muvaffaqiyatsiz: %', SQLERRM;
 END $$;
 
 -- Check RLS policies

@@ -49,9 +49,9 @@ END;
 $$;
 
 -- 2. Secure Heart Regeneration (Batch)
+-- Note: Interval is hardcoded to 1 hour (3600000ms) to prevent client exploitation.
 CREATE OR REPLACE FUNCTION public.regen_hearts_secure(
-  p_user_id uuid,
-  p_regen_ms integer DEFAULT 3600000 -- 1 hour in ms
+  p_user_id uuid
 )
 RETURNS TABLE(
   success boolean,
@@ -68,11 +68,17 @@ DECLARE
   v_now timestamptz := now();
   v_regen_steps integer;
   v_hearts_to_add integer;
+  v_regen_ms integer := 3600000; -- 1 hour in ms
 BEGIN
   SELECT hearts, hearts_last_regen INTO v_hearts, v_last_regen
   FROM public.profiles
   WHERE user_id = p_user_id
   FOR UPDATE;
+
+  IF v_hearts IS NULL THEN
+    RETURN QUERY SELECT false, 0, 'Profile not found'::text;
+    RETURN;
+  END IF;
 
   IF v_hearts >= 5 THEN
     RETURN QUERY SELECT true, v_hearts, 'Already full'::text;
@@ -80,13 +86,13 @@ BEGIN
   END IF;
 
   -- Calculate steps
-  v_regen_steps := floor(extract(epoch from (v_now - v_last_regen)) * 1000 / p_regen_ms);
+  v_regen_steps := floor(extract(epoch from (v_now - v_last_regen)) * 1000 / v_regen_ms);
   v_hearts_to_add := LEAST(v_regen_steps, 5 - v_hearts);
 
   IF v_hearts_to_add > 0 THEN
     UPDATE public.profiles
     SET hearts = hearts + v_hearts_to_add,
-        hearts_last_regen = v_last_regen + (v_hearts_to_add * p_regen_ms * interval '1 millisecond')
+        hearts_last_regen = v_last_regen + (v_hearts_to_add * v_regen_ms * interval '1 millisecond')
     WHERE user_id = p_user_id;
     
     RETURN QUERY SELECT true, (v_hearts + v_hearts_to_add), 'Hearts regenerated'::text;

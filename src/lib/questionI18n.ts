@@ -110,6 +110,25 @@ export const toUzbekQuestionText = (text: string): string => {
   m = raw.match(/^A store had (\d+) apples\. (\d+) were sold\. How many are left\?$/i);
   if (m) return `Do'konda ${m[1]} ta olma bor edi. ${m[2]} tasi sotildi. Nechta qoldi?`;
 
+  // Word problems — umumiy patternlar
+  m = raw.match(/^(.+) had (\d+) (.+)\. (?:He|She|They) (?:gave|gives) (\d+) (?:to .+|away)\. How many (?:are left|does .+ have|remain)\??$/i);
+  if (m) return `${m[1]}da ${m[2]} ta ${m[3]} bor edi. ${m[4]} tasi berildi. Nechta qoldi?`;
+
+  m = raw.match(/^There (?:are|were) (\d+) (.+)\. (\d+) (?:are|were|fly|swim) (?:absent|away|eaten|used|lost|broken)\. How many (?:are left|remain|are present)\??$/i);
+  if (m) return `${m[2].charAt(0).toUpperCase() + m[2].slice(1)}: ${m[1]} ta bor edi. ${m[3]} tasi ketdi. Nechta qoldi?`;
+
+  m = raw.match(/^(\w+) has (\d+) (.+)\. (?:He|She) (?:loses?|lost|gives?|gave) (\d+)\. How many does (?:he|she) have\??$/i);
+  if (m) return `${m[1]}da ${m[2]} ta ${m[3]} bor edi. ${m[4]} tasi ketdi. Nechta qoldi?`;
+
+  m = raw.match(/^How many (?:are left|remain)\??$/i);
+  if (m) return 'Nechta qoldi?';
+
+  m = raw.match(/^How many in total\??$/i);
+  if (m) return 'Jami nechta?';
+
+  m = raw.match(/^How many altogether\??$/i);
+  if (m) return 'Hammasi nechta?';
+
   m = raw.match(/^What is (.+) as an improper fraction\?$/i);
   if (m) return `${m[1]} ni noto'g'ri kasr ko'rinishida yozing.`;
 

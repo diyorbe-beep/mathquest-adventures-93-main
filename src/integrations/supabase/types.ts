@@ -432,6 +432,227 @@ export type Database = {
           },
         ]
       }
+      idempotency_keys: {
+        Row: {
+          created_at: string
+          key: string
+          response_data: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          response_data?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          response_data?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string | null
+          order_id: string
+          quantity: number
+          status: Database["public"]["Enums"]["order_status"]
+          unit_price: number
+          vendor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          order_id: string
+          quantity: number
+          status?: Database["public"]["Enums"]["order_status"]
+          unit_price: number
+          vendor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          order_id?: string
+          quantity?: number
+          status?: Database["public"]["Enums"]["order_status"]
+          unit_price?: number
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          id: string
+          idempotency_key: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          idempotency_key?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          idempotency_key?: string | null
+          status?: Database["public"]["Enums"]["order_status"]
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      shop_items: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          sort_order: number
+          stock_quantity: number
+          vendor_id: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          price: number
+          sort_order?: number
+          stock_quantity?: number
+          vendor_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          sort_order?: number
+          stock_quantity?: number
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_items_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_inventory: {
+        Row: {
+          acquired_at: string
+          id: string
+          item_id: string
+          quantity: number
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string
+          id?: string
+          item_id: string
+          quantity?: number
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string
+          id?: string
+          item_id?: string
+          quantity?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_inventory_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors: {
+        Row: {
+          business_name: string
+          created_at: string
+          description: string | null
+          id: string
+          is_verified: boolean
+          logo_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_verified?: boolean
+          logo_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_verified?: boolean
+          logo_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -444,9 +665,84 @@ export type Database = {
         }
         Returns: boolean
       }
+      process_marketplace_order: {
+        Args: {
+          p_items: Json
+          p_idempotency_key: string | null
+        }
+        Returns: {
+          success: boolean
+          order_id: string
+          total_amount: number
+          new_balance: number
+        }[]
+      }
+      award_xp: {
+        Args: {
+          p_user_id: string
+          p_lesson_id: string
+          p_amount: number
+          p_source: string
+        }
+        Returns: {
+          success: boolean
+          new_level: number
+          new_xp: number
+          message: string
+        }[]
+      }
+      purchase_item: {
+        Args: {
+          p_user_id: string
+          p_item_id: string
+          p_quantity: number
+        }
+        Returns: {
+          success: boolean
+          new_balance: number
+          message: string
+        }[]
+      }
+      spend_heart: {
+        Args: {
+          p_user_id: string
+          p_reason: string
+        }
+        Returns: {
+          success: boolean
+          new_hearts: number
+          message: string
+        }[]
+      }
+      regen_hearts_secure: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          success: boolean
+          new_hearts: number
+          message: string
+        }[]
+      }
+      update_streak_secure: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          success: boolean
+          new_streak: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "student" | "parent"
+      order_status:
+        | "pending"
+        | "paid"
+        | "processing"
+        | "shipped"
+        | "delivered"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
