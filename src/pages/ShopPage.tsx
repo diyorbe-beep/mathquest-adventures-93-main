@@ -168,7 +168,11 @@ const ShopPage = () => {
                       </span>
                       <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
                       <span className="text-xs font-bold text-primary flex items-center gap-1">
-                         <Package className="h-3 w-3" /> {item.vendors?.business_name || 'Bosh do\'kon'}
+                         <Package className="h-3 w-3" /> 
+                         {item.vendors?.business_name || 'Bosh do\'kon'}
+                         {item.vendors?.is_verified && (
+                           <span className="text-blue-500" title="Tasdiqlangan sotuvchi">®</span>
+                         )}
                       </span>
                     </div>
                     <h3 className="text-lg font-bold text-foreground line-clamp-1">{item.name}</h3>

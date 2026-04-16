@@ -591,6 +591,7 @@ export type Database = {
       user_inventory: {
         Row: {
           acquired_at: string
+          acquired_from: string
           id: string
           item_id: string
           quantity: number
@@ -598,6 +599,7 @@ export type Database = {
         }
         Insert: {
           acquired_at?: string
+          acquired_from?: string
           id?: string
           item_id: string
           quantity?: number
@@ -605,6 +607,7 @@ export type Database = {
         }
         Update: {
           acquired_at?: string
+          acquired_from?: string
           id?: string
           item_id?: string
           quantity?: number

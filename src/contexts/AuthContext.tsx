@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { EnvValidator } from '@/lib/envValidation';
 
 interface AuthContextType {
   user: User | null;
@@ -18,6 +19,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Validate environment on mount
+  useEffect(() => {
+    try {
+      EnvValidator.getEnvConfig();
+      if (EnvValidator.isDevelopment()) {
+        console.log('Environment validation passed');
+      }
+    } catch (error) {
+      console.error('Environment validation failed:', error.message);
+      // Don't block app in development, just log the error
+    }
+  }, []);
+
   useEffect(() => {
     // onAuthStateChange fires immediately with the current session (INITIAL_SESSION event),
     // so getSession() is redundant and causes a double-set race condition.
@@ -32,9 +46,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, username: string) => {
     try {
+      // Validate inputs
+      const emailValidation = EnvValidator.validateEmail(email);
+      const passwordValidation = EnvValidator.validatePassword(password);
+      const usernameValidation = EnvValidator.validateUsername(username);
+      
+      if (!emailValidation.valid || !passwordValidation.valid || !usernameValidation.valid) {
+        const errorMessage = [
+          emailValidation.message,
+          passwordValidation.message,
+          usernameValidation.message
+        ].filter(Boolean).join('; ');
+        
+        if (EnvValidator.isDevelopment()) {
+          console.error('Validation failed:', errorMessage);
+        }
+        
+        return { error: new Error(errorMessage) };
+      }
+      
       // Log signup attempt in development only
-      if (import.meta.env.DEV) {
-        console.log('Signup attempt:', { email, username, passwordLength: password.length });
+      if (EnvValidator.isDevelopment()) {
+        console.log('Signup attempt:', { 
+          email, 
+          username, 
+          passwordLength: password.length,
+          emailValid: emailValidation.valid,
+          passwordValid: passwordValidation.valid,
+          usernameValid: usernameValidation.valid
+        });
       }
       
       const { data, error } = await supabase.auth.signUp({
@@ -43,23 +83,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         options: { data: { username } },
       });
       
-      if (import.meta.env.DEV) {
+      if (EnvValidator.isDevelopment()) {
         console.log('Signup response:', { data, error });
       }
       
       if (error) {
-        // Use proper error handling
-        if (import.meta.env.DEV) {
-          console.error('Supabase ro\'yxatdan o\'tish xatosi:', error);
+        // Classify error type
+        let errorMessage = 'Ro\'yxatdan o\'tishda xatolik yuz berdi';
+        
+        if (error.message.includes('User already registered')) {
+          errorMessage = 'Bu email allaqachon ro\'yxatdan o\'tgan. Iltimos boshqa urinib ko\'ring.';
+        } else if (error.message.includes('Invalid email')) {
+          errorMessage = 'Email noto\'g\'ri formatda.';
+        } else if (error.message.includes('weak_password')) {
+          errorMessage = 'Parol juda oddiy. Kamida 8 ta belgi, harf va raqam bo\'lishi kerak.';
         }
-        return { error };
+        
+        if (EnvValidator.isDevelopment()) {
+          console.error('Supabase signup error:', error);
+        }
+        
+        return { error: new Error(errorMessage) };
       }
       
       return { error: null };
     } catch (err) {
-      // Use proper error handling
-      if (import.meta.env.DEV) {
-        console.error('Kutilmagan ro\'yxatdan o\'tish xatosi:', err);
+      if (EnvValidator.isDevelopment()) {
+        console.error('Kutilmagan signup xatosi:', err);
       }
       return { error: err as Error };
     }

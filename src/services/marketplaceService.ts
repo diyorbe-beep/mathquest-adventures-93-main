@@ -9,12 +9,21 @@ export interface CartItem {
   icon: string;
 }
 
+export interface MarketplaceOrderResult {
+  success: boolean;
+  order_id?: string;
+  message?: string;
+  total_amount?: number;
+  new_balance?: number;
+  items_processed?: any[];
+}
+
 export class MarketplaceService {
   /**
    * Bir nechta mahsulotli bozor buyurtmasini qayta ishlaydi.
    * Server tomonida atomiklik, zaxira va idempotentlikni boshqaradi.
    */
-  static async checkout(items: CartItem[], idempotencyKey?: string) {
+  static async checkout(items: CartItem[], idempotencyKey?: string): Promise<MarketplaceOrderResult> {
     const formattedItems = items.map(item => ({
       item_id: item.id,
       quantity: item.quantity
@@ -45,11 +54,23 @@ export class MarketplaceService {
   static async getShopItems() {
     const { data, error } = await supabase
       .from('shop_items')
-      .select('*')
+      .select(`
+        *,
+        vendors!inner (
+          id,
+          business_name,
+          is_verified,
+          logo_url
+        )
+      `)
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      if (import.meta.env.DEV) console.error('Shop items fetch error:', error);
+      throw error;
+    }
+    
     return data;
   }
 
@@ -59,10 +80,63 @@ export class MarketplaceService {
   static async getUserOrders() {
     const { data, error } = await supabase
       .from('orders')
-      .select('*, order_items(*, shop_items(name, icon))')
+      .select(`
+        *,
+        order_items(
+          *,
+          shop_items(
+            name, 
+            icon,
+            vendors!inner (
+              business_name,
+              is_verified
+            )
+          )
+        )
+      `)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      if (import.meta.env.DEV) console.error('User orders fetch error:', error);
+      throw error;
+    }
+    
+    return data;
+  }
+
+  /**
+   * Sotuvchi ma'lumotlarini oladi
+   */
+  static async getVendorInfo(vendorId: string) {
+    const { data, error } = await supabase
+      .from('vendors')
+      .select('*')
+      .eq('id', vendorId)
+      .single();
+
+    if (error) {
+      if (import.meta.env.DEV) console.error('Vendor info fetch error:', error);
+      throw error;
+    }
+    
+    return data;
+  }
+
+  /**
+   * Barcha tasdiqlangan sotuvchilarni oladi
+   */
+  static async getVerifiedVendors() {
+    const { data, error } = await supabase
+      .from('vendors')
+      .select('*')
+      .eq('is_verified', true)
+      .order('business_name', { ascending: true });
+
+    if (error) {
+      if (import.meta.env.DEV) console.error('Verified vendors fetch error:', error);
+      throw error;
+    }
+    
     return data;
   }
 }
