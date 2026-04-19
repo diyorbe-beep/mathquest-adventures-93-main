@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { QuestionVariationGenerator, AnswerVariation } from '@/lib/questionVariations';
-import { toUzbekOption } from '@/lib/questionI18nEnhanced';
 
 interface TypeAnswerQuestionProps {
   onAnswer: (answer: string) => void;

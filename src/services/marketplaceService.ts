@@ -56,7 +56,7 @@ export class MarketplaceService {
       .from('shop_items')
       .select(`
         *,
-        vendors!inner (
+        vendors (
           id,
           business_name,
           is_verified,
@@ -87,7 +87,7 @@ export class MarketplaceService {
           shop_items(
             name, 
             icon,
-            vendors!inner (
+            vendors (
               business_name,
               is_verified
             )

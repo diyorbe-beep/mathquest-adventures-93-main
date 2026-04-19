@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useShop } from '@/hooks/useShop';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Heart, Star, Trophy } from 'lucide-react';
+import { Heart, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ShopPage = () => {
   const { 
     shopItems, 
-    userInventory, 
     userStats, 
     itemsLoading, 
     inventoryLoading, 
@@ -41,7 +40,7 @@ const ShopPage = () => {
       await purchaseMutation.mutateAsync({ itemId, quantity: 1 });
       toast.success('Xarid muvaffaqiyatli!');
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error instanceof Error ? error.message : String(error));
     }
   };
 

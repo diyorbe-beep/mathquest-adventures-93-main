@@ -102,7 +102,7 @@ const Dashboard = () => {
         <motion.div variants={stagger.container} initial="initial" animate="animate">
           {/* Stats Cards */}
           <motion.div variants={stagger.item} className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-8">
-            <StatCard icon="⭐" label="Jami XP" value={profile.xp.toLocaleString()} color="bg-quest-yellow/10 text-quest-yellow" />
+            <StatCard icon="⭐" label="Jami tajriba balli" value={profile.xp.toLocaleString()} color="bg-quest-yellow/10 text-quest-yellow" />
             <StatCard icon="📚" label="Bajarilgan darslar" value={`${completedLessons}/${totalLessons}`} color="bg-quest-blue/10 text-quest-blue" />
             <StatCard icon="🎯" label="Daraja" value={profile.level.toString()} color="bg-quest-green/10 text-quest-green" />
             <StatCard icon="🔥" label="Ketma-ketlik" value={`${profile.streak_days} kun`} color="bg-quest-orange/10 text-quest-orange" />
@@ -112,7 +112,7 @@ const Dashboard = () => {
           <motion.div variants={stagger.item} className="mb-8 rounded-2xl bg-card p-5 shadow-md">
             <div className="flex items-center justify-between mb-2">
               <span className="font-bold text-sm text-foreground">{profile.level}-daraja</span>
-              <span className="text-xs font-semibold text-muted-foreground">Keyingi darajagacha {xpToNextLevel} XP</span>
+              <span className="text-xs font-semibold text-muted-foreground">Keyingi darajagacha {xpToNextLevel} ball</span>
             </div>
             <div className="h-4 rounded-full bg-muted overflow-hidden">
               <motion.div

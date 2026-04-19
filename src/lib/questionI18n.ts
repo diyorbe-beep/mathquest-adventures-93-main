@@ -14,10 +14,10 @@ const EXACT_TEXT_MAP: Record<string, string> = {
   'Which is smaller: 13 or 8?': 'Qaysi biri kichikroq: 13 yoki 8?',
   // Pattern questions
   'What comes next: 2, 4, 6, __?': 'Keyingisi necha: 2, 4, 6, __?',
-  // Fraction questions
-  'What fraction is shaded?': 'Qaysi qism kasr ko‘rinishida?',
-  'What is 3/4 as a decimal?': '3/4 o‘nlik ko‘rinishida necha?',
-  'What is 0.75 as a fraction?': '0.75 kasr ko‘rinishida necha?',
+  // Fraction questions (natural Uzbek; avoid literal "which part is in fraction form")
+  'What fraction is shaded?': 'Rasmda bo‘yalgan qism qaysi kasrga teng?',
+  'What is 3/4 as a decimal?': '3/4 soni o‘nlik kasrda qanday yoziladi?',
+  'What is 0.75 as a fraction?': '0,75 qaysi oddiy kasrga teng?',
   // Geometry questions
   'What is the perimeter?': 'Perimetr necha?',
   'What is the area?': 'Yuzasi necha?',
@@ -98,8 +98,11 @@ export const toUzbekQuestionText = (text: string): string => {
   const raw = text.trim();
   if (EXACT_TEXT_MAP[raw]) return EXACT_TEXT_MAP[raw];
 
-  let m = raw.match(/^What is (.+)\?$/i);
-  if (m) return `${m[1]} nechiga teng?`;
+  // SQL migratsiyasi noto'g'ri qilgan: "What is … ?" → "… nechiga teng?" (masalan, 3/4 as a decimal)
+  let m = raw.match(/^(.+) as a decimal nechiga teng\?$/i);
+  if (m) return `${m[1].trim()} soni o‘nlik kasrda qanday yoziladi?`;
+  m = raw.match(/^(.+) as a fraction nechiga teng\?$/i);
+  if (m) return `${m[1].trim()} qaysi oddiy kasrga teng?`;
 
   m = raw.match(/^Which is larger: (.+) or (.+)\?$/i);
   if (m) return `Qaysi biri kattaroq: ${m[1]} yoki ${m[2]}?`;
@@ -178,13 +181,19 @@ export const toUzbekQuestionText = (text: string): string => {
   if (m) return `Keyingisi necha: ${m[1]}?`;
 
   m = raw.match(/^What fraction is shaded\?$/i);
-  if (m) return 'Qaysi qism kasr ko\'rinishida?';
+  if (m) return 'Rasmda bo‘yalgan qism qaysi kasrga teng?';
 
   m = raw.match(/^What is (\d+)\/(\d+) as a decimal\?$/i);
-  if (m) return `${m[1]}/${m[2]} o\'nlik ko\'rinishida necha?`;
+  if (m) return `${m[1]}/${m[2]} soni o‘nlik kasrda qanday yoziladi?`;
 
   m = raw.match(/^What is ([\d.]+) as a fraction\?$/i);
-  if (m) return `${m[1]} kasr ko\'rinishida necha?`;
+  if (m) return `${m[1]} qaysi oddiy kasrga teng?`;
+
+  m = raw.match(/^Which fraction is (?:larger|bigger|greater): (.+) or (.+)\?$/i);
+  if (m) return `Qaysi kasr kattaroq: ${m[1]} yoki ${m[2]}?`;
+
+  m = raw.match(/^Which fraction is smaller: (.+) or (.+)\?$/i);
+  if (m) return `Qaysi kasr kichikroq: ${m[1]} yoki ${m[2]}?`;
 
   m = raw.match(/^What is the (perimeter|area)\?$/i);
   if (m) return m[1] === 'perimeter' ? 'Perimetr necha?' : 'Yuzasi necha?';
@@ -279,6 +288,7 @@ export const toUzbekQuestionText = (text: string): string => {
   m = raw.match(/^What shape is this\?$/i);
   if (m) return `Bu qanday shakl?`;
 
+  m = raw.match(/^Identify the shape$/i);
   if (m) return `Shaklni aniqlang`;
 
   m = raw.match(/^Count the sides$/i);
@@ -286,6 +296,9 @@ export const toUzbekQuestionText = (text: string): string => {
 
   m = raw.match(/^Name this shape$/i);
   if (m) return `Bu shaklning nomi`;
+
+  m = raw.match(/^What is (.+)\?$/i);
+  if (m) return `${m[1]} nechiga teng?`;
 
   return raw;
 };

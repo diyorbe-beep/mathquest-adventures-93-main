@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ShoppingBag, 
   ShoppingCart, 
   ArrowLeft, 
   Plus, 
@@ -11,7 +10,6 @@ import {
   CheckCircle2, 
   AlertCircle,
   Clock,
-  ChevronRight,
   Package
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -32,7 +30,8 @@ const ShopPage = () => {
     removeItem, 
     updateQuantity, 
     clearCart, 
-    totalPrice: cartTotal 
+    totalPrice: cartTotal,
+    totalItems: cartCount,
   } = useCart();
   const { data: coins = 0, refetch: refetchCoins } = useCoinBalance();
   const queryClient = useQueryClient();
@@ -42,9 +41,14 @@ const ShopPage = () => {
   const [activeCategory, setActiveCategory] = useState('all');
 
   // Fetch items using new service
-  const { data: items, isLoading } = useQuery({
+  const {
+    data: items,
+    isLoading,
+    isError,
+    error: itemsError,
+  } = useQuery({
     queryKey: ['marketplace_items'],
-    queryFn: () => MarketplaceService.getShopItems()
+    queryFn: () => MarketplaceService.getShopItems(),
   });
 
   const filteredItems = useMemo(() => {
@@ -73,16 +77,18 @@ const ShopPage = () => {
 
     try {
       const result = await MarketplaceService.checkout(cartItems, idempotencyKey);
-      if (result.success) {
-        toast.success('Xarid muvaffaqiyatli yakunlandi!');
+      if (result?.success) {
+        toast.success(result.message || 'Xarid muvaffaqiyatli yakunlandi!');
         clearCart();
         setIsCartOpen(false);
         refetchCoins();
         queryClient.invalidateQueries({ queryKey: ['user_inventory'] });
         queryClient.invalidateQueries({ queryKey: ['marketplace_orders'] });
+      } else {
+        toast.error(result?.message || 'Xaridni yakunlab bo‘lmadi');
       }
-    } catch (error: any) {
-      // Error handled in service
+    } catch {
+      toast.error('Xarid paytida xatolik yuz berdi');
     } finally {
       setIsCheckingOut(false);
     }
@@ -103,6 +109,20 @@ const ShopPage = () => {
             <div className="flex items-center gap-2 bg-yellow-500/10 text-yellow-500 px-3 py-1.5 rounded-full font-bold text-sm border border-yellow-500/20">
               <span className="text-base">🪙</span> {coins}
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="relative rounded-full font-bold"
+              onClick={() => setIsCartOpen(true)}
+              aria-label="Savatni ochish"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </Button>
           </div>
         </div>
       </header>
@@ -123,12 +143,26 @@ const ShopPage = () => {
           ))}
         </div>
 
+        {isError && (
+          <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm font-semibold text-destructive">
+            Mahsulotlarni yuklab bo‘lmadi:{' '}
+            {itemsError instanceof Error ? itemsError.message : 'Noma’lum xato'}
+          </div>
+        )}
+
         {/* Item Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="h-64 rounded-2xl bg-muted animate-pulse border border-border" />
             ))}
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center">
+            <p className="text-lg font-bold text-foreground">Hozircha mahsulot yo‘q</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Administrator do‘konni to‘ldirgach, bu yerda ko‘rinadi. Yoki barcha kategoriyani tekshiring.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

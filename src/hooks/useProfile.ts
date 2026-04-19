@@ -1,7 +1,9 @@
+import { useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
+import { getMsUntilNextHeart } from '@/lib/heartRegen';
 
 type Profile = Tables<'profiles'>;
 
@@ -163,6 +165,23 @@ export const useProfile = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
     },
   });
+
+  const profileRef = useRef<Profile | null | undefined>(undefined);
+  profileRef.current = profileQuery.data;
+
+  useEffect(() => {
+    if (!user) return;
+    const id = window.setInterval(() => {
+      const p = profileRef.current;
+      if (!p || p.hearts >= 5) return;
+      if (!p.hearts_last_regen) return;
+      const ms = getMsUntilNextHeart(p.hearts, p.hearts_last_regen);
+      if (ms === 0 && !regenerateHearts.isPending) {
+        regenerateHearts.mutate();
+      }
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [user, regenerateHearts]);
 
   const updateStreak = useMutation({
     mutationFn: async () => {

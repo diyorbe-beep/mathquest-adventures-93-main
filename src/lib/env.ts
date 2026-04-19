@@ -3,14 +3,16 @@ interface EnvConfig {
   VITE_SUPABASE_PUBLISHABLE_KEY: string;
   VITE_APP_NAME?: string;
   VITE_APP_VERSION?: string;
+  /** To‘liq sayt URL (masalan https://mathquest.uz) — og:image va og:url uchun */
+  VITE_SITE_URL?: string;
 }
 
 const getRequiredEnv = (key: keyof EnvConfig): string => {
   const value = import.meta.env[key];
   if (!value?.trim()) {
     throw new Error(
-      `Talab qilinadigan muhit o\'zgaruvchisi topilmadi: ${key}. ` +
-      `.env faylingizni yoki deployment konfiguratsiyangizni tekshiring.`
+      `Talab qilinadigan muhit o'zgaruvchisi topilmadi: ${key}. ` +
+        `.env faylingizni yoki deployment konfiguratsiyangizni tekshiring.`
     );
   }
   return value;
@@ -25,17 +27,23 @@ export const env: EnvConfig = {
   VITE_SUPABASE_PUBLISHABLE_KEY: getRequiredEnv('VITE_SUPABASE_PUBLISHABLE_KEY'),
   VITE_APP_NAME: getOptionalEnv('VITE_APP_NAME', 'MathQuest'),
   VITE_APP_VERSION: getOptionalEnv('VITE_APP_VERSION', '1.0.0'),
+  VITE_SITE_URL: getOptionalEnv('VITE_SITE_URL', ''),
 };
 
 export const isDevelopment = import.meta.env.DEV;
 export const isProduction = import.meta.env.PROD;
 
-// Validate Supabase URL format
+// Validate Supabase URL format (allows custom domains and local Supabase)
 export const validateSupabaseConfig = () => {
   try {
     const url = new URL(env.VITE_SUPABASE_URL);
-    if (!url.hostname.includes('.supabase.co')) {
-      throw new Error('Noto\'g\'ri Supabase URL formati');
+    const host = url.hostname.toLowerCase();
+    const isLocal =
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host.endsWith('.local');
+    if (!isLocal && url.protocol !== 'https:') {
+      throw new Error('Production Supabase URL HTTPS bo\'lishi kerak');
     }
     
     // Log only in development

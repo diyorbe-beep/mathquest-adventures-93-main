@@ -45,7 +45,9 @@ const EquationBuilderQuestion = ({ options, correctAnswer, onAnswer, disabled }:
             <button
               key={idx}
               type="button"
-              onClick={() => { value && removeAt(idx); }}
+              onClick={() => {
+                if (value) removeAt(idx);
+              }}
               disabled={!value || disabled}
               className={`h-12 rounded-xl border-2 text-center text-lg font-black transition-colors ${
                 value ? 'border-primary bg-primary/10 text-foreground' : 'border-border text-muted-foreground'

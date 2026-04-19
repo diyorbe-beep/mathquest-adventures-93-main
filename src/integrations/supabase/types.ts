@@ -68,6 +68,30 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_ingest: {
+        Row: {
+          created_at: string
+          id: string
+          item_count: number
+          kind: string
+          payload: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_count?: number
+          kind: string
+          payload?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_count?: number
+          kind?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
       hearts_logs: {
         Row: {
           change: number

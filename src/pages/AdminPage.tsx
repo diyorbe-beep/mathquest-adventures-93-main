@@ -31,14 +31,6 @@ const roleLabels: Record<string, string> = {
   student: 'O‘quvchi',
 };
 
-const questionTypeLabels: Record<string, string> = {
-  multiple_choice: 'Ko‘p tanlov',
-  drag_drop: 'Surib qo‘yish',
-  equation_builder: 'Tenglama tuzish',
-  type_answer: 'Javob yozish',
-  number_line: 'Son o‘qi',
-};
-
 const AdminPage = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('analytics');

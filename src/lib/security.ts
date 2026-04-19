@@ -40,14 +40,30 @@ export class InputValidator {
       return { valid: false, message: 'Email talab qilinadi' };
     }
 
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const sanitized = sanitizeInput(email);
-    
-    if (!emailRegex.test(sanitized)) {
+    const trimmed = email.trim();
+    // Reject characters that are never valid in RFC5322 mailbox / common safe subset
+    if (/[^a-zA-Z0-9@._%+-]/.test(trimmed)) {
       return { valid: false, message: 'Noto\'g\'ri email formati' };
     }
 
-    if (sanitized.length > 254) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(trimmed)) {
+      return { valid: false, message: 'Noto\'g\'ri email formati' };
+    }
+
+    const atParts = trimmed.split('@');
+    if (atParts.length !== 2) {
+      return { valid: false, message: 'Noto\'g\'ri email formati' };
+    }
+    const [local, domain] = atParts;
+    if (!local || !domain || local.includes('..') || domain.includes('..')) {
+      return { valid: false, message: 'Noto\'g\'ri email formati' };
+    }
+    if (domain.startsWith('.') || domain.endsWith('.')) {
+      return { valid: false, message: 'Noto\'g\'ri email formati' };
+    }
+
+    if (trimmed.length > 254) {
       return { valid: false, message: 'Email juda uzun' };
     }
 
@@ -121,9 +137,9 @@ export class InputValidator {
     }
 
     const sanitized = sanitizeInput(input);
-    const num = integer ? parseInt(sanitized, 10) : parseFloat(sanitized);
+    const num = parseFloat(sanitized);
 
-    if (isNaN(num)) {
+    if (!Number.isFinite(num)) {
       return { valid: false, message: 'Noto\'g\'ri son formati' };
     }
 
@@ -331,8 +347,8 @@ export class ApiSecurity {
       return { valid: false, error: 'Noto\'g\'ri foydalanuvchi ID' };
     }
 
-    // Validate item ID
-    if (!itemId || typeof itemId !== 'string' || itemId.length < 5) {
+    // Validate item ID (UUID / opaque id — short strings are invalid)
+    if (!itemId || typeof itemId !== 'string' || itemId.length < 8) {
       return { valid: false, error: 'Noto\'g\'ri mahsulot ID' };
     }
 
@@ -362,8 +378,7 @@ export class ApiSecurity {
       return { valid: false, error: 'Noto\'g\'ri foydalanuvchi ID' };
     }
 
-    // Validate lesson ID
-    if (!lessonId || typeof lessonId !== 'string' || lessonId.length < 5) {
+    if (!lessonId || typeof lessonId !== 'string' || lessonId.length < 8) {
       return { valid: false, error: 'Noto\'g\'ri dars ID' };
     }
 

@@ -118,7 +118,7 @@ class AnalyticsService {
           this.updateMetric('largestContentfulPaint', lastEntry.startTime);
         });
         observer.observe({ entryTypes: ['largest-contentful-paint'] });
-      } catch (e) {
+      } catch {
         // LCP not supported
       }
 
@@ -134,7 +134,7 @@ class AnalyticsService {
           this.updateMetric('cumulativeLayoutShift', clsValue);
         });
         clsObserver.observe({ entryTypes: ['layout-shift'] });
-      } catch (e) {
+      } catch {
         // CLS not supported
       }
 
@@ -146,7 +146,7 @@ class AnalyticsService {
           }
         });
         fidObserver.observe({ entryTypes: ['first-input'] });
-      } catch (e) {
+      } catch {
         // FID not supported
       }
     }

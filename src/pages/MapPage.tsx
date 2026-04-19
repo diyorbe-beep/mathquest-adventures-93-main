@@ -50,7 +50,9 @@ const MapPage = () => {
                 <motion.button
                   whileHover={prevComplete ? { scale: 1.01 } : {}}
                   whileTap={prevComplete ? { scale: 0.98 } : {}}
-                  onClick={() => { prevComplete && navigate(`/topic/${topic.slug}`); }}
+                  onClick={() => {
+                    if (prevComplete) navigate(`/topic/${topic.slug}`);
+                  }}
                   disabled={!prevComplete}
                   className={`w-full rounded-2xl p-6 text-left transition-all ${
                     allComplete

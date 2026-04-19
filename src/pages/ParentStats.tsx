@@ -90,7 +90,7 @@ const ParentStats = () => {
               <p className="text-3xl font-black text-quest-blue">{overallAccuracy}%</p>
             </div>
             <div className="rounded-2xl bg-quest-yellow/10 p-4">
-              <p className="text-xs font-semibold text-muted-foreground">Jami XP</p>
+              <p className="text-xs font-semibold text-muted-foreground">Jami tajriba balli</p>
               <p className="text-3xl font-black text-quest-yellow">{profile.xp.toLocaleString()}</p>
             </div>
             <div className="rounded-2xl bg-quest-purple/10 p-4">
@@ -105,7 +105,7 @@ const ParentStats = () => {
 
           {/* XP Chart */}
           <div className="rounded-2xl bg-card p-6 shadow-md">
-            <h3 className="font-extrabold text-foreground mb-4">Shu haftadagi XP</h3>
+            <h3 className="font-extrabold text-foreground mb-4">Shu haftadagi tajriba balli</h3>
             <div className="flex items-end gap-2 h-32">
               {xpByDay.map((d, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
@@ -159,7 +159,7 @@ const ParentStats = () => {
                 {xpLogs.slice(0, 10).map(log => (
                   <div key={log.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                     <div>
-                      <p className="font-bold text-sm text-foreground">+{log.amount} XP</p>
+                      <p className="font-bold text-sm text-foreground">+{log.amount} ball</p>
                       <p className="text-xs text-muted-foreground">{xpSourceLabel[log.source] ?? log.source}</p>
                     </div>
                     <span className="text-xs text-muted-foreground">

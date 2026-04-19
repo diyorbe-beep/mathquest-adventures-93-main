@@ -7,7 +7,10 @@ const NotFound = () => {
   useEffect(() => {
     // Log 404 errors in development only
     if (import.meta.env.DEV) {
-      console.error("404 Xato: Foydalanuvchi mavjud bo\'lmagan yo\'lni ochishga harakat qildi:", location.pathname);
+      console.error(
+        "404 Xato: Foydalanuvchi mavjud bo'lmagan yo'lni ochishga harakat qildi:",
+        location.pathname
+      );
     } else {
       // In production, send to error tracking
       // TODO: Implement proper error tracking service

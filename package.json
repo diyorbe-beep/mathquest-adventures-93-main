@@ -11,7 +11,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "bootstrap:admin": "node scripts/create-admin.mjs"
+    "test:e2e": "playwright test",
+    "bootstrap:admin": "node scripts/create-admin.mjs",
+    "dev:vercel": "vercel dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

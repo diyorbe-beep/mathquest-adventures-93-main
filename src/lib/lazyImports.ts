@@ -3,14 +3,7 @@
  * Optimizes bundle size by loading components on demand
  */
 
-import { useState, useEffect, useRef, RefObject, lazy } from 'react';
-
-interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
-  src: string;
-  alt: string;
-  className?: string;
-  placeholder?: string;
-}
+import { useState, useEffect, lazy, type RefObject } from 'react';
 
 // Lazy load heavy components
 export const lazyLoadComponent = (importFunc: () => Promise<any>) => {
@@ -148,7 +141,7 @@ export const loadWhenVisible = <T,>(
 };
 
 // Performance monitoring for lazy loads
-export const trackLazyLoad = (componentName: string, loadTime: number) => {
+export const trackLazyLoad = (componentName: string, _loadTime: number) => {
   if (typeof window !== 'undefined' && 'performance' in window) {
     performance.mark(`${componentName}-loaded`);
     performance.measure(

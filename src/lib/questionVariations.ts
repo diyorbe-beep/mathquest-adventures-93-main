@@ -50,7 +50,7 @@ export class QuestionVariationGenerator {
   // Bir nechta to'g'ri javob variantlarini yaratish
   private static generateCorrectAnswerVariations(
     correctAnswer: string,
-    questionType: string
+    _questionType: string
   ): string[] {
     // Sodda saqlang: variant sifatida faqat asl to'g'ri javob ko'rsatilishi kerak
     // Agar bu juda aniq holat bo'lmasa.
@@ -72,7 +72,7 @@ export class QuestionVariationGenerator {
   private static generateDistractors(
     correctAnswer: string,
     questionType: string,
-    difficulty: number
+    _difficulty: number
   ): string[] {
     const distractors: string[] = [];
     
@@ -255,7 +255,7 @@ export class QuestionVariationGenerator {
   static generateDragDropVariations(
     correctAnswer: string,
     options: string[],
-    questionText: string
+    _questionText: string
   ): AnswerVariation[] {
     const variations: AnswerVariation[] = [];
     const correctItems = correctAnswer.split(',').map(i => i.trim());
@@ -340,7 +340,7 @@ export class QuestionVariationGenerator {
 // Savollarga variantlarni qo'llash uchun yordamchi funksiya
 export const applyQuestionVariations = (
   questions: any[],
-  variationSeed?: string
+  _variationSeed?: string
 ): any[] => {
   return questions.map(question => {
     const questionType = question.question_type || 'multiple_choice';

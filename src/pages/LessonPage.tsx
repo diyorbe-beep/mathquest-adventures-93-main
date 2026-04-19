@@ -346,7 +346,7 @@ const LessonPage = () => {
             </div>
             <div className="rounded-xl bg-quest-yellow/10 p-3">
               <p className="text-2xl font-black text-quest-yellow">+{earnedXp}</p>
-              <p className="text-xs font-semibold text-muted-foreground">XP</p>
+              <p className="text-xs font-semibold text-muted-foreground">Tajriba</p>
             </div>
             <div className="rounded-xl bg-quest-orange/10 p-3">
               <p className="text-2xl font-black text-quest-orange">{mins}:{secs.toString().padStart(2, '0')}</p>

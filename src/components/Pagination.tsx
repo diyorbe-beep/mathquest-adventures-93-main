@@ -1,5 +1,4 @@
-import { ReactNode, useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 
 interface PaginationProps {
   totalItems: number;
@@ -40,9 +39,7 @@ const Pagination = ({
   const getVisiblePages = () => {
     const delta = 2;
     const range = [];
-    let rangeWithDots = [];
-    let left = 1;
-    let right = totalPages;
+    const rangeWithDots: (number | string)[] = [];
 
     for (let i = 1; i <= totalPages; i++) {
       if (i === 1 || i === totalPages || i === currentPage || i === currentPage - delta || i === currentPage + delta) {

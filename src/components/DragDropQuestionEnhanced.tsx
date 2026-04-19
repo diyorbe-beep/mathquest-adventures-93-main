@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, Reorder } from 'framer-motion';
 import { toUzbekOption } from '@/lib/questionI18nEnhanced';
 import { isDragDropSelectMode } from '@/lib/dragDropSelectMode';
-import { QuestionVariationGenerator, AnswerVariation } from '@/lib/questionVariations';
+import type { AnswerVariation } from '@/lib/questionVariations';
 
 interface DragDropQuestionProps {
   options: string[];
@@ -19,25 +19,16 @@ const DragDropQuestion = ({
   questionText, 
   onAnswer, 
   disabled,
-  variations = []
+  variations: _variations = []
 }: DragDropQuestionProps) => {
   const [items, setItems] = useState(options);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [showHint, setShowHint] = useState(false);
-  
+  const [hintOpen, setHintOpen] = useState(false);
+
   // Determine mode: if correct answer length < options length, it's a "select" mode
   // Otherwise it's an "order" mode
   const isSelectMode = isDragDropSelectMode(questionText, correctAnswer, options.length);
   const isOrderMode = !isSelectMode;
-
-  // Generate variations if not provided
-  const questionVariations = variations.length > 0 
-    ? variations 
-    : QuestionVariationGenerator.generateDragDropVariations(
-        correctAnswer,
-        options,
-        questionText
-      );
 
   const toggleSelect = (item: string) => {
     if (disabled) return;
@@ -108,17 +99,27 @@ const DragDropQuestion = ({
         </div>
       )}
 
-      {showHint && (
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setHintOpen((h) => !h)}
+          className="text-sm font-semibold text-muted-foreground underline-offset-4 hover:underline"
+        >
+          💡 Maslahat
+        </button>
+      </div>
+
+      {hintOpen && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="p-3 rounded-lg bg-quest-yellow/10 border border-quest-yellow/20"
+          className="rounded-lg border border-quest-yellow/20 bg-quest-yellow/10 p-3"
         >
           <p className="text-sm font-semibold text-quest-yellow">
-            💡 {isOrderMode 
-              ? 'Elementlarni to\'g\'ri tartibda joylashtiring!' 
-              : 'Faqat to\'g\'ri javoblarni tanlang!'}
+            {isOrderMode
+              ? "Elementlarni to'g'ri tartibda joylashtiring!"
+              : "Faqat to'g'ri javoblarni tanlang!"}
           </p>
         </motion.div>
       )}

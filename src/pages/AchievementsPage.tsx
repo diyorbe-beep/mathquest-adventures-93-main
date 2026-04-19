@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useAchievements } from '@/hooks/useAchievements';
+import { achievementDescriptionUz, achievementNameUz } from '@/lib/achievementI18n';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
@@ -42,8 +43,8 @@ const AchievementsPage = () => {
                 <span className={`text-4xl block mb-2 ${earned ? '' : 'grayscale'}`}>
                   {achievement.icon}
                 </span>
-                <p className="font-extrabold text-sm text-foreground">{achievement.name}</p>
-                <p className="text-xs text-muted-foreground mt-1">{achievement.description}</p>
+                <p className="font-extrabold text-sm text-foreground">{achievementNameUz(achievement.name)}</p>
+                <p className="text-xs text-muted-foreground mt-1">{achievementDescriptionUz(achievement.description)}</p>
                 {earned && (
                   <span className="mt-2 inline-block rounded-full bg-quest-green/20 px-2 py-0.5 text-xs font-bold text-quest-green">
                     ✓ Qozonildi

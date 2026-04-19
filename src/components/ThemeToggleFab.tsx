@@ -23,7 +23,6 @@ const ThemeToggleFab = () => {
   }
 
   const isDark = resolvedTheme === 'dark';
-  const isLight = resolvedTheme === 'light';
 
   const toggleTheme = () => {
     setTheme(isDark ? 'light' : 'dark');

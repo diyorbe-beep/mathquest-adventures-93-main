@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ThemeToggleFab from "@/components/ThemeToggleFab";
+import { DocumentHead } from "@/components/DocumentHead";
 import { handleError } from "@/lib/errorHandler";
 
 // Lazy loaded components
@@ -73,6 +74,7 @@ const App = () => (
           <TooltipProvider>
             <Sonner />
             <BrowserRouter>
+              <DocumentHead />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />

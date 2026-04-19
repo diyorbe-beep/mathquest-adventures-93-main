@@ -2,8 +2,8 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLessons, useTopics, useUserProgress } from '@/hooks/useLessons';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Lock, CheckCircle, Circle } from 'lucide-react';
-import { toUzbekLessonDescription, toUzbekLessonTitle } from '@/lib/lessonI18n';
+import { ArrowLeft, Lock, CheckCircle } from 'lucide-react';
+import { toUzbekLessonTitle } from '@/lib/lessonI18n';
 import { toUzbekTopicDescription, toUzbekTopicName } from '@/lib/topicI18n';
 
 const TopicMap = () => {
@@ -71,7 +71,9 @@ const TopicMap = () => {
                 <motion.button
                   whileHover={unlocked ? { scale: 1.08 } : {}}
                   whileTap={unlocked ? { scale: 0.95 } : {}}
-                  onClick={() => { unlocked && navigate(`/lesson/${lesson.id}`); }}
+                  onClick={() => {
+                    if (unlocked) navigate(`/lesson/${lesson.id}`);
+                  }}
                   disabled={!unlocked}
                   className={`relative flex h-20 w-20 items-center justify-center rounded-full border-4 shadow-lg transition-all ${
                     completed
@@ -92,7 +94,7 @@ const TopicMap = () => {
                 <p className={`mt-2 text-center text-xs font-bold max-w-[120px] ${unlocked ? 'text-foreground' : 'text-muted-foreground'}`}>
                   {toUzbekLessonTitle(lesson.title)}
                 </p>
-                <p className="text-center text-xs text-muted-foreground">+{lesson.xp_reward} XP</p>
+                <p className="text-center text-xs text-muted-foreground">+{lesson.xp_reward} ball</p>
               </motion.div>
             );
           })}

@@ -5,7 +5,7 @@
  * Validates security settings before deployment
  */
 
-import { readFileSync } from 'fs';
+import { execSync } from 'child_process';
 import { join } from 'path';
 
 // Security checks
@@ -39,13 +39,9 @@ const securityChecks = [
     name: 'Console Logging Removal',
     check: () => {
       try {
-        const buildDir = join(process.cwd(), 'dist');
-        const files = ['assets/index-*.js', 'assets/vendor-*.js'];
-        
-        for (const pattern of files) {
-          // Check if console.log exists in built files
-          // This is a simplified check - in reality you'd use glob
-        }
+        const _distDir = join(process.cwd(), 'dist');
+        void _distDir;
+        // Simplified: full scan would glob built chunks for console.* calls
         
         return { passed: true };
       } catch {
@@ -65,8 +61,6 @@ const securityChecks = [
   {
     name: 'Dependencies Security',
     check: async () => {
-      // Run npm audit check
-      const { execSync } = require('child_process');
       try {
         const auditOutput = execSync('npm audit --json', { encoding: 'utf8' });
         const audit = JSON.parse(auditOutput);

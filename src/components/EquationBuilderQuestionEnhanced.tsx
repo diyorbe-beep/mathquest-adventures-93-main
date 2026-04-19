@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { QuestionVariationGenerator, AnswerVariation } from '@/lib/questionVariations';
 import { toUzbekOption } from '@/lib/questionI18nEnhanced';
 

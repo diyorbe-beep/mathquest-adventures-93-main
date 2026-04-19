@@ -9,7 +9,17 @@ import path from "path";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default tseslint.config(
-  { ignores: ["dist", "node_modules", "*.config.js", "*.config.ts"] },
+  {
+    ignores: [
+      "dist",
+      "node_modules",
+      "*.config.js",
+      "*.config.ts",
+      "api/**",
+      "src/test/integration/**",
+      ".history/**",
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -26,14 +36,29 @@ export default tseslint.config(
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
       "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-empty-object-type": "off",
     },
   },
   {
-    files: ["**/*.js"],
+    files: ["scripts/**/*.js"],
     extends: [js.configs.recommended],
     languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: { ...globals.node },
     },
-  }
+  },
+  {
+    files: ["src/lib/security.ts"],
+    rules: {
+      "no-control-regex": "off",
+      "no-useless-escape": "off",
+    },
+  },
+  {
+    files: ["src/lib/questionI18n.ts", "src/lib/questionI18nEnhanced.ts"],
+    rules: {
+      "no-useless-escape": "off",
+    },
+  },
 );
