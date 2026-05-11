@@ -19,6 +19,17 @@ type ChartContextProps = {
 
 const ChartContext = React.createContext<ChartContextProps | null>(null);
 
+function escapeCssAttrValue(value: string): string {
+  // Minimal escaping for a double-quoted CSS attribute value.
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+function toSafeCssVarSuffix(key: string): string {
+  // Prevent CSS injection via config keys; keep it deterministic and readable.
+  // CSS custom property names are case-sensitive; we normalize to lower-case.
+  return key.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+}
+
 function useChart() {
   const context = React.useContext(ChartContext);
 
@@ -71,11 +82,11 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
         __html: Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+${prefix} [data-chart="${escapeCssAttrValue(id)}"] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    return color ? `  --color-${toSafeCssVarSuffix(key)}: ${color};` : null;
   })
   .join("\n")}
 }

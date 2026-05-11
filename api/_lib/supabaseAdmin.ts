@@ -18,13 +18,11 @@ export function getSupabaseUrl(): string {
  */
 export function getSupabaseAdmin(): SupabaseClient {
   const url = getSupabaseUrl();
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
-  if (!key) {
-    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY (or fallback key) for API routes');
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!serviceRoleKey) {
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY for API routes');
   }
-  return createClient(url, key, {
+  return createClient(url, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

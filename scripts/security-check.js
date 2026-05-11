@@ -28,10 +28,23 @@ const securityChecks = [
     name: 'Supabase URL Format',
     check: () => {
       const url = process.env.VITE_SUPABASE_URL;
-      if (!url.includes('.supabase.co')) {
-        return { passed: false, message: 'Invalid Supabase URL format' };
+      if (!url) {
+        // Let the "Environment Variables" check report the real issue.
+        return { passed: false, message: 'Missing VITE_SUPABASE_URL' };
       }
-      return { passed: true };
+      try {
+        const parsed = new URL(url);
+        const host = parsed.hostname.toLowerCase();
+        const isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local');
+        const looksLikeSupabase = host.includes('.supabase.co') || host.includes('.supabase.in') || host.includes('supabase');
+
+        if (!isLocal && !looksLikeSupabase) {
+          return { passed: false, message: 'URL does not look like Supabase (or local) host' };
+        }
+        return { passed: true };
+      } catch {
+        return { passed: false, message: 'Invalid URL' };
+      }
     }
   },
   
@@ -64,9 +77,16 @@ const securityChecks = [
       try {
         const auditOutput = execSync('npm audit --json', { encoding: 'utf8' });
         const audit = JSON.parse(auditOutput);
-        
-        const highVulns = audit.vulnerabilities?.high || 0;
-        const criticalVulns = audit.vulnerabilities?.critical || 0;
+
+        // npm audit JSON has changed formats over time; support both shapes.
+        const highVulns =
+          audit?.metadata?.vulnerabilities?.high ??
+          audit?.vulnerabilities?.high ??
+          0;
+        const criticalVulns =
+          audit?.metadata?.vulnerabilities?.critical ??
+          audit?.vulnerabilities?.critical ??
+          0;
         
         if (criticalVulns > 0) {
           return { passed: false, message: `${criticalVulns} critical vulnerabilities found` };

@@ -107,12 +107,12 @@ const ShopPage = () => {
           {/* Shop Items Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map(item => {
-              const ownedQuantity = getItemQuantity(item.id);
-              const canPurchase = canAfford(item.price);
+              const ownedQuantity = getItemQuantity(String(item.id));
+              const canPurchase = canAfford(Number(item.price ?? 0));
               
               return (
                 <motion.div
-                  key={item.id}
+                  key={String(item.id)}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
@@ -121,14 +121,14 @@ const ShopPage = () => {
                   }`}
                 >
                   <div className="text-center mb-4">
-                    <div className="text-4xl mb-2">{item.icon}</div>
+                    <div className="text-4xl mb-2">{item.icon ?? '🛍️'}</div>
                     <h3 className="font-bold text-foreground mb-2">{item.name}</h3>
                     <p className="text-sm text-muted-foreground mb-4">{item.description}</p>
                   </div>
                   
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <div className="text-2xl font-bold text-foreground">{item.price}</div>
+                      <div className="text-2xl font-bold text-foreground">{Number(item.price ?? 0)}</div>
                       <div className="text-sm text-muted-foreground">tanga</div>
                     </div>
                     
@@ -140,7 +140,7 @@ const ShopPage = () => {
                   </div>
                   
                   <button
-                    onClick={() => handlePurchase(item.id, item.price)}
+                    onClick={() => handlePurchase(String(item.id), Number(item.price ?? 0))}
                     disabled={!canPurchase || purchaseMutation.isPending}
                     className={`w-full py-3 rounded-xl font-bold transition-all ${
                       canPurchase && !purchaseMutation.isPending
@@ -153,7 +153,7 @@ const ShopPage = () => {
                     ) : ownedQuantity > 0 ? (
                       <span>Qo'shish ({ownedQuantity} ta)</span>
                     ) : canPurchase ? (
-                      <span>Sotib olish ({item.price} tanga)</span>
+                      <span>Sotib olish ({Number(item.price ?? 0)} tanga)</span>
                     ) : (
                       <span>Yetarli tangalar kerak</span>
                     )}

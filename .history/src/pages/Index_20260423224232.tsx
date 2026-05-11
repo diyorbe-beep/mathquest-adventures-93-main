@@ -59,7 +59,7 @@ const Index = () => {
             className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-bold leading-tight text-primary-foreground shadow-lg shadow-primary/25 transition-shadow hover:shadow-xl sm:text-lg"
           >
             <span className="text-balance whitespace-normal">Sarguzashtni boshlash</span>
-            <span className="shrink-0" aria-hidden>🎮</span>
+            <span className="shrink-0" aria-hidden></span>
           </motion.button>
           <motion.button
             type="button"

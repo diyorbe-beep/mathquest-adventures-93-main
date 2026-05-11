@@ -13,6 +13,8 @@ export function useNextHeartCountdown(hearts: number | undefined, heartsLastRege
   if (hearts === undefined || !heartsLastRegen) return null;
   const ms = getMsUntilNextHeart(hearts, heartsLastRegen);
   if (ms === null) return null;
-  if (ms === 0) return { text: 'Hozir' };
+  // When countdown reaches 0, the app should be regenerating on the backend.
+  // Showing "Hozir" tends to get stuck if the profile refresh is delayed.
+  if (ms === 0) return { text: 'Tiklanmoqda...' };
   return { text: formatHeartCountdown(ms) };
 }

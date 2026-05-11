@@ -25,13 +25,16 @@ const Dashboard = () => {
   const logActivity = useActivityLog();
   const navigate = useNavigate();
 
+  const regenMutate = regenerateHearts.mutate;
+  const streakMutate = updateStreak.mutate;
+  const logMutate = logActivity.mutate;
+
   useEffect(() => {
-    if (profile) {
-      regenerateHearts.mutate();
-      updateStreak.mutate();
-      logActivity.mutate({ action: 'dashboard_visit' });
-    }
-  }, [profile?.user_id]);
+    if (!profile) return;
+    regenMutate();
+    streakMutate();
+    logMutate({ action: 'dashboard_visit' });
+  }, [profile?.user_id, regenMutate, streakMutate, logMutate]);
 
   if (authLoading || profileLoading) return (
     <div className="flex min-h-screen items-center justify-center bg-background">
@@ -57,8 +60,8 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border">
-        <div className="container mx-auto flex items-center justify-between px-4 py-3">
+      <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border safe-pt">
+        <div className="container mx-auto flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="text-3xl">{getAvatarEmoji(profile.avatar_id)}</span>
             <div>
@@ -68,10 +71,10 @@ const Dashboard = () => {
               <p className="text-xs font-semibold text-muted-foreground">{profile.level}-daraja</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end sm:gap-4">
             <div className="flex items-center gap-1 rounded-full bg-quest-yellow/10 px-3 py-1">
               <span>🪙</span>
-              <span className="font-bold text-sm text-foreground">{((profile as any).coins ?? 0).toLocaleString()}</span>
+              <span className="font-bold text-sm text-foreground">{profile.coins.toLocaleString()}</span>
             </div>
             <div className="flex flex-col items-end gap-0.5">
               <div className="flex items-center gap-1" title="Yurakchalar">
@@ -98,7 +101,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
+      <main className="container mx-auto px-4 py-8 max-w-4xl safe-pb">
         <motion.div variants={stagger.container} initial="initial" animate="animate">
           {/* Stats Cards */}
           <motion.div variants={stagger.item} className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-8">
@@ -125,7 +128,7 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Navigation Grid */}
-          <motion.div variants={stagger.item} className="grid grid-cols-2 gap-4 mb-8">
+          <motion.div variants={stagger.item} className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 mb-8">
             <NavCard icon="🗺️" title="Sarguzasht xaritasi" subtitle="Sarguzashtni davom eting" onClick={() => { navigate('/map'); }} bgClass="bg-gradient-to-br from-quest-green/10 to-quest-blue/10" />
             <NavCard icon="🏆" title="Reyting" subtitle="Eng yaxshilarni ko‘ring" onClick={() => { navigate('/leaderboard'); }} bgClass="bg-gradient-to-br from-quest-orange/10 to-quest-yellow/10" />
             <NavCard icon="🎖️" title="Yutuqlar" subtitle={`${progress?.filter(p => p.completed).length ?? 0} ta olingan`} onClick={() => { navigate('/achievements'); }} bgClass="bg-gradient-to-br from-quest-purple/10 to-quest-pink/10" />
@@ -142,7 +145,7 @@ const Dashboard = () => {
           {/* Topics */}
           <motion.div variants={stagger.item}>
             <h3 className="text-xl font-extrabold text-foreground mb-4">Mavzular</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2">
               {topics?.map(topic => {
                 const topicLessons = allLessons?.filter(l => l.topic_id === topic.id) ?? [];
                 const completed = progress?.filter(p => p.completed && topicLessons.some(l => l.id === p.lesson_id)).length ?? 0;

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Tables } from '@/integrations/supabase/types';
+import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { getMsUntilNextHeart } from '@/lib/heartRegen';
 
 type Profile = Tables<'profiles'>;
@@ -108,7 +108,7 @@ export const useProfile = () => {
         .eq('user_id', user.id)
         .single();
 
-      const currentCoins = (profile as any)?.coins ?? 0;
+      const currentCoins = Number(profile?.coins ?? 0);
       const newCoins = currentCoins + amount;
 
       const { error: updateError } = await supabase
@@ -119,12 +119,14 @@ export const useProfile = () => {
       if (updateError) throw updateError;
 
       // Coin log yozish
-      await supabase.from('coin_logs' as any).insert({
+      const row: TablesInsert<'coin_logs'> = {
         user_id: user.id,
         amount,
         source,
-        metadata: lessonId ? { lesson_id: lessonId } : {},
-      });
+        lesson_id: lessonId ?? null,
+        metadata: lessonId ? { lesson_id: lessonId } : null,
+      };
+      await supabase.from('coin_logs').insert(row);
 
       return { success: true, newCoins };
     },
@@ -168,6 +170,36 @@ export const useProfile = () => {
 
   const profileRef = useRef<Profile | null | undefined>(undefined);
   profileRef.current = profileQuery.data;
+  const regenPending = regenerateHearts.isPending;
+  const regenMutate = regenerateHearts.mutate;
+
+  // Ensure hearts are regenerated when returning to the app (e.g. after closing the tab),
+  // even if the user doesn't land on Dashboard.
+  useEffect(() => {
+    const p = profileQuery.data;
+    if (!user || !p) return;
+    if (p.hearts >= 5) return;
+    if (!p.hearts_last_regen) return;
+    const ms = getMsUntilNextHeart(p.hearts, p.hearts_last_regen);
+    if (ms === 0 && !regenPending) {
+      regenMutate();
+    }
+  }, [user, profileQuery.data, regenPending, regenMutate]);
+
+  useEffect(() => {
+    if (!user) return;
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      const p = profileRef.current;
+      if (!p || p.hearts >= 5 || !p.hearts_last_regen) return;
+      const ms = getMsUntilNextHeart(p.hearts, p.hearts_last_regen);
+      if (ms === 0 && !regenPending) {
+        regenMutate();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [user, regenPending, regenMutate]);
 
   useEffect(() => {
     if (!user) return;
@@ -176,12 +208,12 @@ export const useProfile = () => {
       if (!p || p.hearts >= 5) return;
       if (!p.hearts_last_regen) return;
       const ms = getMsUntilNextHeart(p.hearts, p.hearts_last_regen);
-      if (ms === 0 && !regenerateHearts.isPending) {
-        regenerateHearts.mutate();
+      if (ms === 0 && !regenPending) {
+        regenMutate();
       }
     }, 1000);
     return () => window.clearInterval(id);
-  }, [user, regenerateHearts]);
+  }, [user, regenPending, regenMutate]);
 
   const updateStreak = useMutation({
     mutationFn: async () => {

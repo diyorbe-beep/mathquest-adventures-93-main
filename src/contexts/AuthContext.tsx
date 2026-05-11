@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { EnvValidator } from '@/lib/envValidation';
+import { isDevelopment, validateSupabaseConfig } from '@/lib/env';
+import { InputValidator } from '@/lib/security';
 
 interface AuthContextType {
   user: User | null;
@@ -22,12 +23,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Validate environment on mount
   useEffect(() => {
     try {
-      EnvValidator.getEnvConfig();
-      if (EnvValidator.isDevelopment()) {
+      validateSupabaseConfig();
+      if (isDevelopment) {
         console.log('Environment validation passed');
       }
     } catch (error) {
-      console.error('Environment validation failed:', error.message);
+      console.error('Environment validation failed:', error instanceof Error ? error.message : String(error));
       // Don't block app in development, just log the error
     }
   }, []);
@@ -47,9 +48,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, username: string) => {
     try {
       // Validate inputs
-      const emailValidation = EnvValidator.validateEmail(email);
-      const passwordValidation = EnvValidator.validatePassword(password);
-      const usernameValidation = EnvValidator.validateUsername(username);
+      const emailValidation = InputValidator.validateEmail(email);
+      const passwordValidation = InputValidator.validatePassword(password);
+      const usernameValidation = InputValidator.validateUsername(username);
       
       if (!emailValidation.valid || !passwordValidation.valid || !usernameValidation.valid) {
         const errorMessage = [
@@ -58,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           usernameValidation.message
         ].filter(Boolean).join('; ');
         
-        if (EnvValidator.isDevelopment()) {
+        if (isDevelopment) {
           console.error('Validation failed:', errorMessage);
         }
         
@@ -66,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       // Log signup attempt in development only
-      if (EnvValidator.isDevelopment()) {
+      if (isDevelopment) {
         console.log('Signup attempt:', { 
           email, 
           username, 
@@ -83,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         options: { data: { username } },
       });
       
-      if (EnvValidator.isDevelopment()) {
+      if (isDevelopment) {
         console.log('Signup response:', { data, error });
       }
       
@@ -99,7 +100,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           errorMessage = 'Parol juda oddiy. Kamida 8 ta belgi, harf va raqam bo\'lishi kerak.';
         }
         
-        if (EnvValidator.isDevelopment()) {
+        if (isDevelopment) {
           console.error('Supabase signup error:', error);
         }
         
@@ -108,7 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       return { error: null };
     } catch (err) {
-      if (EnvValidator.isDevelopment()) {
+      if (isDevelopment) {
         console.error('Kutilmagan signup xatosi:', err);
       }
       return { error: err as Error };

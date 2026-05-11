@@ -13,6 +13,7 @@ export default tseslint.config(
     ignores: [
       "dist",
       "node_modules",
+      "**/*.timestamp-*.mjs",
       "*.config.js",
       "*.config.ts",
       "api/**",

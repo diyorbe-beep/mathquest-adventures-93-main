@@ -15,7 +15,7 @@ export class EnvValidator {
   /**
    * Validate environment configuration
    */
-  static validate(): EnvConfig & { errors: string[] } {
+  static validate(): { config: EnvConfig; errors: string[] } {
     const errors: string[] = [];
     const config: Partial<EnvConfig> = {};
 

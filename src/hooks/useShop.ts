@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import type { Database } from '@/integrations/supabase/types';
 
-type ShopItem = Record<string, unknown>;
-type UserInventory = Record<string, unknown>;
+type ShopItem = Database['public']['Tables']['shop_items']['Row'];
+type UserInventoryRow = Database['public']['Tables']['user_inventory']['Row'];
+type UserInventory = UserInventoryRow & { shop_items?: ShopItem | null };
 
 type ProfileStats = {
   xp: number;
@@ -88,18 +90,8 @@ export const useShop = () => {
       if (error) throw new Error(error.message || 'Xarid amalga oshmadi');
 
       const row = Array.isArray(data) ? data[0] : data;
-      if (!row?.success) {
-        throw new Error(row?.message || 'Xarid amalga oshmadi');
-      }
-
-      return row as {
-        success: boolean;
-        order_id?: string;
-        message?: string;
-        total_amount?: number;
-        new_balance?: number;
-        items_processed?: unknown;
-      };
+      if (!row || row.success !== true) throw new Error('Xarid amalga oshmadi');
+      return row;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user_inventory'] });
@@ -186,11 +178,15 @@ export const usePurchaseShopItem = () => {
   return useMutation({
     mutationFn: async (itemId: string) => {
       if (!user) throw new Error('Tasdiqlanmagan');
-      const { data, error } = await supabase.rpc('purchase_shop_item', { p_item_id: itemId });
+      const idempotencyKey = `purchase_${user.id}_${itemId}_${Date.now()}`;
+      const { data, error } = await supabase.rpc('process_marketplace_order', {
+        p_items: [{ item_id: itemId, quantity: 1 }],
+        p_idempotency_key: idempotencyKey,
+      });
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : data;
-      if (!row?.success) throw new Error(row?.message ?? 'Sotib olishda xatolik');
-      return row as { success: boolean; message: string; new_balance: number };
+      if (!row || row.success !== true) throw new Error('Sotib olishda xatolik');
+      return row;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['coin_balance', user?.id] });

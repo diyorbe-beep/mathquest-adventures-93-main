@@ -199,37 +199,6 @@ class AnalyticsService {
     window.addEventListener('offline', () => {
       this.isOnline = false;
     });
-
-    // Monitor fetch errors
-    const originalFetch = window.fetch;
-    window.fetch = async (...args) => {
-      try {
-        const response = await originalFetch(...args);
-        if (!response.ok) {
-          this.recordError({
-            message: `HTTP Xatosi: ${response.status} ${response.statusText}`,
-            type: 'network',
-            timestamp: Date.now(),
-            url: args[0] as string,
-            userAgent: navigator.userAgent,
-            userId: this.userId || undefined,
-            sessionId: this.sessionId
-          });
-        }
-        return response;
-      } catch (error) {
-        this.recordError({
-          message: `Tarmoq xatosi: ${error}`,
-          type: 'network',
-          timestamp: Date.now(),
-          url: args[0] as string,
-          userAgent: navigator.userAgent,
-          userId: this.userId || undefined,
-          sessionId: this.sessionId
-        });
-        throw error;
-      }
-    };
   }
 
   // Public API

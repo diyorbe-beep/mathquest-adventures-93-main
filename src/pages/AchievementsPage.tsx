@@ -16,7 +16,7 @@ const AchievementsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border">
+      <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border safe-pt">
         <div className="container mx-auto flex items-center gap-4 px-4 py-3">
           <button onClick={() => { navigate('/dashboard'); }} className="rounded-xl p-2 hover:bg-muted transition-colors active:scale-95">
             <ArrowLeft className="h-5 w-5" />
@@ -26,8 +26,8 @@ const AchievementsPage = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-lg">
-        <div className="grid grid-cols-2 gap-3">
+      <main className="container mx-auto px-4 py-6 max-w-lg safe-pb">
+        <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
           {allAchievements.map((achievement, i) => {
             const earned = earnedIds.has(achievement.id);
             return (

@@ -79,9 +79,9 @@ const Pagination = ({
       {/* Page Numbers */}
       {visiblePages.map((page, index) => (
         <button
-          key={index}
-          onClick={() => handlePageChange(page)}
-          disabled={page === '...'}
+          key={typeof page === 'number' ? page : `dots-${index}`}
+          onClick={() => (typeof page === 'number' ? handlePageChange(page) : undefined)}
+          disabled={typeof page !== 'number'}
           className={`px-3 py-2 rounded-lg border transition-colors ${
             page === currentPage
               ? 'border-primary bg-primary text-primary-foreground'

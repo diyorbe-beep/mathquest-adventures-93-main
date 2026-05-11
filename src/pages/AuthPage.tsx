@@ -86,7 +86,7 @@ const AuthPage = () => {
             MathQuest
           </h1>
           <p className="mt-2 text-muted-foreground font-semibold">
-            Matematika sarguzashingiz shu yerda boshlanadi!
+            Matematika sarguzashtingiz shu yerda boshlanadi!
           </p>
         </div>
 

@@ -30,8 +30,7 @@ export const lazyComponents = {
 
 // Dynamic import hook
 export const useDynamicImport = <T>(
-  importFunc: () => Promise<T>,
-  dependencies: any[] = []
+  importFunc: () => Promise<T>
 ) => {
   const [component, setComponent] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,7 +63,7 @@ export const useDynamicImport = <T>(
     return () => {
       isMounted = false;
     };
-  }, dependencies);
+  }, [importFunc]);
 
   return { component, loading, error };
 };

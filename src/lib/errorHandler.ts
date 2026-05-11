@@ -21,6 +21,7 @@ class ErrorHandler {
   private static instance: ErrorHandler;
   private errorQueue: ErrorReport[] = [];
   private isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+  private maxQueueSize = 25;
 
   private constructor() {
     if (typeof window === 'undefined') return;
@@ -82,15 +83,16 @@ class ErrorHandler {
     try {
       // In production, send to error tracking
       if (import.meta.env.PROD) {
-        // TODO: Replace with your error tracking service (Sentry, LogRocket, etc.)
-        // await fetch('/api/errors', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(report)
-        // });
-        
-        // For now, just log to console in production
-        console.error('Ishlab chiqarish xatosi:', report);
+        // Keep this lightweight: sample to reduce noise/cost and avoid accidental PII floods.
+        const sampleRate = 0.25;
+        if (Math.random() <= sampleRate) {
+          await fetch('/api/errors', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(report),
+            keepalive: true,
+          });
+        }
       } else {
         // In development, log detailed error
         console.group('\ud83d\udea8 Xato ushladi');
@@ -101,6 +103,9 @@ class ErrorHandler {
     } catch (sendError) {
       console.error('Xato hisobotini yuborish muvaffaqatsiz bo\'ldi:', sendError);
       this.errorQueue.push(report);
+      if (this.errorQueue.length > this.maxQueueSize) {
+        this.errorQueue = this.errorQueue.slice(-this.maxQueueSize);
+      }
     }
   }
 
