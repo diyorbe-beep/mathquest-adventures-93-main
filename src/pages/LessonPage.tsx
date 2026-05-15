@@ -51,7 +51,7 @@ const LessonPage = () => {
 
   useEffect(() => {
     if (lessonId) {
-      supabase.from('lessons').select('title, xp_reward, topic_id').eq('id', lessonId).single().then(({ data }) => {
+      supabase.from('lessons').select('title, xp_reward, topic_id, sort_order').eq('id', lessonId).single().then(({ data }) => {
         if (data) {
           setLessonTitle(data.title);
           setXpReward(data.xp_reward);

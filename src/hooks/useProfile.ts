@@ -46,47 +46,25 @@ export const useProfile = () => {
   const addXp = useMutation({
     mutationFn: async ({ amount, source = 'dars', lessonId }: { amount: number; source?: string; lessonId?: string }) => {
       if (!user) throw new Error('Tasdiqlanmagan');
+      if (!lessonId) throw new Error('lessonId talab qilinadi');
 
-      // Kunlik XP chegarasini tekshirish
-      const today = new Date().toISOString().split('T')[0];
-      const { data: todayLogs } = await supabase
-        .from('xp_logs')
-        .select('amount')
-        .eq('user_id', user.id)
-        .gte('created_at', today);
-
-      const totalToday = todayLogs?.reduce((s, l) => s + l.amount, 0) ?? 0;
-      if (totalToday + amount > 1000) {
-        throw new Error('Kunlik XP chegarasi oshib ketdi');
-      }
-
-      // Profil yangilash
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('xp, level')
-        .eq('user_id', user.id)
-        .single();
-
-      const currentXp = profile?.xp ?? 0;
-      const newXp = currentXp + amount;
-      const newLevel = Math.floor(newXp / 100) + 1;
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ xp: newXp, level: newLevel, updated_at: new Date().toISOString() })
-        .eq('user_id', user.id);
-
-      if (updateError) throw updateError;
-
-      // XP log yozish
-      await supabase.from('xp_logs').insert({
-        user_id: user.id,
-        amount,
-        source,
-        lesson_id: lessonId || null,
+      // Route through the server-side RPC which enforces the daily cap,
+      // validates the amount, and writes xp_logs atomically.
+      const { data, error } = await supabase.rpc('award_xp', {
+        p_user_id: user.id,
+        p_lesson_id: lessonId,
+        p_amount: amount,
+        p_source: source,
       });
 
-      return { success: true, newXp, newLevel };
+      if (error) throw error;
+
+      const result = Array.isArray(data) ? data[0] : data;
+      if (!result?.success) {
+        throw new Error(result?.message ?? 'XP berishda xatolik');
+      }
+
+      return { success: true, newXp: result.new_xp, newLevel: result.new_level };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
@@ -102,14 +80,18 @@ export const useProfile = () => {
     mutationFn: async ({ amount, source = 'dars', lessonId }: { amount: number; source?: string; lessonId?: string }) => {
       if (!user) throw new Error('Tasdiqlanmagan');
 
-      const { data: profile } = await supabase
+      // Clamp to a reasonable per-lesson maximum to prevent runaway coin awards.
+      const MAX_COINS_PER_AWARD = 500;
+      const safeAmount = Math.min(Math.max(1, Math.round(amount)), MAX_COINS_PER_AWARD);
+
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('coins')
         .eq('user_id', user.id)
         .single();
 
-      const currentCoins = Number(profile?.coins ?? 0);
-      const newCoins = currentCoins + amount;
+      const currentCoins = Number(profileData?.coins ?? 0);
+      const newCoins = currentCoins + safeAmount;
 
       const { error: updateError } = await supabase
         .from('profiles')
@@ -121,7 +103,7 @@ export const useProfile = () => {
       // Coin log yozish
       const row: TablesInsert<'coin_logs'> = {
         user_id: user.id,
-        amount,
+        amount: safeAmount,
         source,
         lesson_id: lessonId ?? null,
         metadata: lessonId ? { lesson_id: lessonId } : null,
@@ -147,9 +129,25 @@ export const useProfile = () => {
         p_reason: 'dars'
       });
       if (error) throw error;
-      return data;
+      // RPC returns an array with one row: { success, new_hearts, message }
+      const result = Array.isArray(data) ? data[0] : data;
+      return result as { success: boolean; new_hearts: number; message: string };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      // Optimistically update the cached profile so the countdown timer starts
+      // immediately without waiting for a full refetch.
+      if (result?.success) {
+        queryClient.setQueryData<Profile | null>(['profile', user?.id], (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            hearts: result.new_hearts,
+            // Reset regen timestamp to now so the 15-min countdown starts from this moment.
+            hearts_last_regen: new Date().toISOString(),
+          };
+        });
+      }
+      // Still invalidate to sync with the real DB value.
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['hearts_logs'] });
     },
@@ -170,22 +168,38 @@ export const useProfile = () => {
 
   const profileRef = useRef<Profile | null | undefined>(undefined);
   profileRef.current = profileQuery.data;
-  const regenPending = regenerateHearts.isPending;
+  const regenPendingRef = useRef(false);
+  regenPendingRef.current = regenerateHearts.isPending;
   const regenMutate = regenerateHearts.mutate;
 
-  // Ensure hearts are regenerated when returning to the app (e.g. after closing the tab),
-  // even if the user doesn't land on Dashboard.
+  // Smart timer: schedules regen exactly when the next heart is due.
+  // Re-schedules automatically whenever the profile data changes (e.g. after each regen).
   useEffect(() => {
-    const p = profileQuery.data;
-    if (!user || !p) return;
-    if (p.hearts >= 5) return;
-    if (!p.hearts_last_regen) return;
-    const ms = getMsUntilNextHeart(p.hearts, p.hearts_last_regen);
-    if (ms === 0 && !regenPending) {
-      regenMutate();
-    }
-  }, [user, profileQuery.data, regenPending, regenMutate]);
+    if (!user) return;
 
+    const p = profileRef.current;
+    if (!p || p.hearts >= 5 || !p.hearts_last_regen) return;
+
+    const ms = getMsUntilNextHeart(p.hearts, p.hearts_last_regen);
+    if (ms === null) return;
+
+    // Already overdue — call regen immediately.
+    if (ms === 0) {
+      if (!regenPendingRef.current) regenMutate();
+      return;
+    }
+
+    // Schedule to fire exactly when the next heart is ready (+ 300ms buffer for clock drift).
+    const id = window.setTimeout(() => {
+      if (!regenPendingRef.current) regenMutate();
+    }, ms + 300);
+
+    return () => window.clearTimeout(id);
+  // profileQuery.data changes after every successful regen, which re-schedules the next one.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, profileQuery.data]);
+
+  // Re-check immediately when the user returns to the tab after being away.
   useEffect(() => {
     if (!user) return;
     const onVisible = () => {
@@ -193,27 +207,13 @@ export const useProfile = () => {
       const p = profileRef.current;
       if (!p || p.hearts >= 5 || !p.hearts_last_regen) return;
       const ms = getMsUntilNextHeart(p.hearts, p.hearts_last_regen);
-      if (ms === 0 && !regenPending) {
+      if (ms === 0 && !regenPendingRef.current) {
         regenMutate();
       }
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [user, regenPending, regenMutate]);
-
-  useEffect(() => {
-    if (!user) return;
-    const id = window.setInterval(() => {
-      const p = profileRef.current;
-      if (!p || p.hearts >= 5) return;
-      if (!p.hearts_last_regen) return;
-      const ms = getMsUntilNextHeart(p.hearts, p.hearts_last_regen);
-      if (ms === 0 && !regenPending) {
-        regenMutate();
-      }
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, [user, regenPending, regenMutate]);
+  }, [user, regenMutate]);
 
   const updateStreak = useMutation({
     mutationFn: async () => {

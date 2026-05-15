@@ -1,10 +1,38 @@
--- Create marketplace order processing function
+-- Create marketplace order processing function (clean version)
 -- This function handles secure, atomic marketplace transactions
 
-BEGIN;
+-- ============================================================
+-- 1. Create idempotent orders table for duplicate prevention
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.idempotent_orders (
+    idempotency_key text PRIMARY KEY,
+    order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE public.idempotent_orders ENABLE ROW LEVEL SECURITY;
+
+-- Policy for idempotent orders
+CREATE POLICY "Users can view their own idempotent orders" ON public.idempotent_orders
+FOR SELECT USING (
+    EXISTS (
+        SELECT 1 FROM public.orders o
+        WHERE o.id = idempotent_orders.order_id
+        AND o.user_id = auth.uid()
+    )
+);
+
+-- Index for performance
+CREATE INDEX IF NOT EXISTS idx_idempotent_orders_key 
+ON public.idempotent_orders(idempotency_key);
+
+CREATE INDEX IF NOT EXISTS idx_idempotent_orders_created 
+ON public.idempotent_orders(created_at);
 
 -- ============================================================
--- 1. Create marketplace order processing function
+-- 2. Create marketplace order processing function
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.process_marketplace_order(
@@ -259,45 +287,7 @@ END;
 $$;
 
 -- ============================================================
--- 2. Create idempotent orders table for duplicate prevention
--- ============================================================
-
-CREATE TABLE IF NOT EXISTS public.idempotent_orders (
-    idempotency_key text PRIMARY KEY,
-    order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
-    created_at timestamptz NOT NULL DEFAULT now()
-);
-
--- Enable RLS
-ALTER TABLE public.idempotent_orders ENABLE ROW LEVEL SECURITY;
-
--- Policy for idempotent orders
-CREATE POLICY "Users can view their own idempotent orders" ON public.idempotent_orders
-FOR SELECT USING (
-    EXISTS (
-        SELECT 1 FROM public.orders o
-        WHERE o.id = idempotent_orders.order_id
-        AND o.user_id = auth.uid()
-    )
-);
-
--- Index for performance
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_idempotent_orders_key 
-ON public.idempotent_orders(idempotency_key);
-
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_idempotent_orders_created 
-ON public.idempotent_orders(created_at);
-
--- ============================================================
--- 3. Grant necessary permissions
--- ============================================================
-
--- Grant execute permission to authenticated users
-GRANT EXECUTE ON FUNCTION public.process_marketplace_order TO authenticated;
-GRANT SELECT ON public.idempotent_orders TO authenticated;
-
--- ============================================================
--- 4. Clean up old idempotent records (older than 24 hours)
+-- 3. Create cleanup function for old idempotent records
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.cleanup_old_idempotent_orders()
@@ -311,7 +301,20 @@ BEGIN
 END;
 $$;
 
--- Grant permission
+-- ============================================================
+-- 4. Grant necessary permissions
+-- ============================================================
+
+-- Grant execute permission to authenticated users
+GRANT EXECUTE ON FUNCTION public.process_marketplace_order TO authenticated;
+GRANT SELECT ON public.idempotent_orders TO authenticated;
 GRANT EXECUTE ON FUNCTION public.cleanup_old_idempotent_orders TO authenticated;
 
-COMMIT;
+-- ============================================================
+-- Migration Summary
+-- ============================================================
+-- Created secure marketplace order processing
+-- Added idempotency protection
+-- Implemented atomic transactions
+-- Added comprehensive error handling
+-- Created audit logging

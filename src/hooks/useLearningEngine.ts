@@ -11,13 +11,13 @@ export const useSkillMastery = () => {
     enabled: !!user,
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('skill_mastery')
         .select('*, topics(name, icon)')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
       if (error) throw error;
-      return (data ?? []) as any[];
+      return data ?? [];
     },
   });
 };
@@ -29,7 +29,7 @@ export const useReviewDueCount = () => {
     enabled: !!user,
     queryFn: async () => {
       if (!user) return 0;
-      const { count, error } = await (supabase as any)
+      const { count, error } = await supabase
         .from('review_queue')
         .select('id', { head: true, count: 'exact' })
         .eq('user_id', user.id)
@@ -47,7 +47,7 @@ export const useReviewQuestions = () => {
     enabled: !!user,
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('review_queue')
         .select('id, question_id, interval_days, ease_factor, repetitions, questions(*)')
         .eq('user_id', user.id)
@@ -55,7 +55,7 @@ export const useReviewQuestions = () => {
         .order('due_at', { ascending: true })
         .limit(20);
       if (error) throw error;
-      return (data ?? []) as any[];
+      return data ?? [];
     },
   });
 };
@@ -88,7 +88,7 @@ export const useLogQuestionAttempt = () => {
     }) => {
       if (!user) return;
 
-      await (supabase as any).from('question_attempts').insert({
+      await supabase.from('question_attempts').insert({
         user_id: user.id,
         lesson_id: lessonId,
         question_id: questionId,
@@ -102,7 +102,7 @@ export const useLogQuestionAttempt = () => {
       });
 
       if (topicId) {
-        const { data: existing } = await (supabase as any)
+        const { data: existing } = await supabase
           .from('skill_mastery')
           .select('*')
           .eq('user_id', user.id)
@@ -116,7 +116,7 @@ export const useLogQuestionAttempt = () => {
         const masteryScore = clamp(currentScore + delta, 0, 100);
 
         if (existing?.id) {
-          await (supabase as any)
+          await supabase
             .from('skill_mastery')
             .update({
               mastery_score: masteryScore,
@@ -127,7 +127,7 @@ export const useLogQuestionAttempt = () => {
             })
             .eq('id', existing.id);
         } else {
-          await (supabase as any).from('skill_mastery').insert({
+          await supabase.from('skill_mastery').insert({
             user_id: user.id,
             topic_id: topicId,
             mastery_score: masteryScore,
@@ -138,7 +138,7 @@ export const useLogQuestionAttempt = () => {
         }
       }
 
-      const { data: queueRow } = await (supabase as any)
+      const { data: queueRow } = await supabase
         .from('review_queue')
         .select('*')
         .eq('user_id', user.id)
@@ -150,7 +150,7 @@ export const useLogQuestionAttempt = () => {
         // Wrong answers return quickly: 10 minutes.
         const dueAt = new Date(now.getTime() + 10 * 60 * 1000).toISOString();
         if (queueRow?.id) {
-          await (supabase as any)
+          await supabase
             .from('review_queue')
             .update({
               due_at: dueAt,
@@ -162,7 +162,7 @@ export const useLogQuestionAttempt = () => {
             })
             .eq('id', queueRow.id);
         } else {
-          await (supabase as any).from('review_queue').insert({
+          await supabase.from('review_queue').insert({
             user_id: user.id,
             question_id: questionId,
             due_at: dueAt,
@@ -180,7 +180,7 @@ export const useLogQuestionAttempt = () => {
         const nextInterval = repetitions <= 1 ? 1 : Math.round(prevInterval * ef);
         const dueAt = new Date(now.getTime() + nextInterval * 24 * 60 * 60 * 1000).toISOString();
 
-        await (supabase as any)
+        await supabase
           .from('review_queue')
           .update({
             due_at: dueAt,
@@ -215,7 +215,7 @@ export const useSavePlacementResult = () => {
     }) => {
       if (!user) return;
       const scorePercent = total > 0 ? Math.round((correct / total) * 100) : 0;
-      await (supabase as any).from('placement_results').insert({
+      await supabase.from('placement_results').insert({
         user_id: user.id,
         topic_id: topicId ?? null,
         correct_answers: correct,

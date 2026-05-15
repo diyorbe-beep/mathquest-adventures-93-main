@@ -456,6 +456,195 @@ export type Database = {
           },
         ]
       }
+      skill_mastery: {
+        Row: {
+          id: string
+          user_id: string
+          topic_id: string
+          mastery_score: number
+          attempts: number
+          correct_count: number
+          last_practiced_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          topic_id: string
+          mastery_score?: number
+          attempts?: number
+          correct_count?: number
+          last_practiced_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          topic_id?: string
+          mastery_score?: number
+          attempts?: number
+          correct_count?: number
+          last_practiced_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_mastery_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_attempts: {
+        Row: {
+          id: string
+          user_id: string
+          lesson_id: string
+          question_id: string
+          topic_id: string | null
+          is_correct: boolean
+          selected_answer: string | null
+          correct_answer: string | null
+          question_type: string | null
+          difficulty: number | null
+          time_spent_seconds: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          lesson_id: string
+          question_id: string
+          topic_id?: string | null
+          is_correct: boolean
+          selected_answer?: string | null
+          correct_answer?: string | null
+          question_type?: string | null
+          difficulty?: number | null
+          time_spent_seconds?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          lesson_id?: string
+          question_id?: string
+          topic_id?: string | null
+          is_correct?: boolean
+          selected_answer?: string | null
+          correct_answer?: string | null
+          question_type?: string | null
+          difficulty?: number | null
+          time_spent_seconds?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_attempts_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_attempts_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_queue: {
+        Row: {
+          id: string
+          user_id: string
+          question_id: string
+          due_at: string
+          interval_days: number
+          ease_factor: number
+          repetitions: number
+          last_result: boolean | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          question_id: string
+          due_at: string
+          interval_days?: number
+          ease_factor?: number
+          repetitions?: number
+          last_result?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          question_id?: string
+          due_at?: string
+          interval_days?: number
+          ease_factor?: number
+          repetitions?: number
+          last_result?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_queue_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      placement_results: {
+        Row: {
+          id: string
+          user_id: string
+          topic_id: string | null
+          correct_answers: number
+          total_answers: number
+          score_percent: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          topic_id?: string | null
+          correct_answers?: number
+          total_answers?: number
+          score_percent?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          topic_id?: string | null
+          correct_answers?: number
+          total_answers?: number
+          score_percent?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placement_results_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       idempotency_keys: {
         Row: {
           created_at: string

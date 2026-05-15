@@ -1,8 +1,6 @@
 -- Fix vendor migration corruption and establish proper shop system relationships
 -- This migration fixes the corrupted 20260412220000 migration and ensures data integrity
 
-BEGIN;
-
 -- ============================================================
 -- 1. Drop corrupted vendor_id column if it exists in inconsistent state
 -- ============================================================
@@ -70,7 +68,7 @@ CREATE POLICY "Vendors can update own" ON public.vendors FOR UPDATE
 USING (auth.uid() = user_id);
 
 -- ============================================================
--- 5. Create official MathQuest vendor
+-- 5. Create official MathQuest vendor and update shop items
 -- ============================================================
 
 DO $$
@@ -145,10 +143,9 @@ CREATE TRIGGER vendors_updated_at
     EXECUTE FUNCTION public.handle_updated_at();
 
 -- ============================================================
--- 8. Data validation and constraints
+-- 7. Data validation
 -- ============================================================
 
--- Ensure all shop items have a vendor
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM public.shop_items WHERE vendor_id IS NULL LIMIT 1) THEN
@@ -166,31 +163,26 @@ BEGIN
 END $$;
 
 -- ============================================================
--- 9. Update RLS policies for shop_items to include vendor access
+-- 8. Update RLS policies for shop_items to include vendor access
 -- ============================================================
 
 DROP POLICY IF EXISTS "Shop items are viewable by everyone" ON public.shop_items;
 CREATE POLICY "Shop items are viewable by everyone" ON public.shop_items FOR SELECT 
 USING (is_active = true);
 
-COMMIT;
-
 -- ============================================================
--- 5. Add performance indexes (outside transaction)
+-- 9. Grant necessary permissions
 -- ============================================================
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_vendors_user_id ON public.vendors(user_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_vendors_business_name ON public.vendors(business_name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_vendors_is_verified ON public.vendors(is_verified);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_shop_items_vendor_id ON public.shop_items(vendor_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_shop_items_active_vendor ON public.shop_items(is_active, vendor_id);
+GRANT SELECT ON public.vendors TO authenticated;
+GRANT SELECT ON public.vendors TO anon;
 
 -- ============================================================
 -- Migration Summary
 -- ============================================================
 -- Fixed corrupted vendor migration
 -- Established proper vendor-item relationships
--- Added performance indexes
 -- Implemented proper RLS policies
 -- Created official MathQuest vendor
 -- Validated data integrity
+-- Note: Indexes will be created separately to avoid CONCURRENTLY issues
